@@ -1,6 +1,6 @@
 /**
- * FeatureCard Component - Senior Design Engineer Level
- * Beautifully animated card with professional hover effects
+ * FeatureCard Component - Premium Design
+ * Elegant card with sophisticated hover effects
  */
 
 'use client';
@@ -31,33 +31,30 @@ export default function FeatureCard({
 
   return (
     <div
-      className="group flex flex-col rounded-xl bg-white p-7 shadow-sm transition-all duration-300 ease-out hover:-translate-y-2 hover:shadow-2xl cursor-pointer opacity-0 animate-fade-in relative overflow-hidden"
+      className="group flex flex-col rounded-xl bg-white border border-[#E5E7EB] p-8 min-h-[280px] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_12px_32px_rgba(0,0,0,0.08)] cursor-pointer opacity-0 animate-fade-in"
       style={{ animationDelay: delay, animationFillMode: 'forwards' }}
       onClick={handleClick}
     >
-      {/* Subtle gradient overlay on hover */}
-      <div className="absolute inset-0 bg-gradient-to-br from-indigo-50 to-pink-50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-xl" />
+      {/* Icon */}
+      <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-xl bg-[#D4A574]/10">
+        <Icon className="h-7 w-7 text-[#D4A574]" strokeWidth={2} />
+      </div>
 
       {/* Content */}
-      <div className="relative z-10">
-        {/* Icon */}
-        <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-lg bg-indigo-100 text-indigo-600">
-          <Icon className="h-6 w-6" strokeWidth={2} />
-        </div>
-
+      <div className="flex-1 flex flex-col">
         {/* Title */}
-        <h3 className="mb-2.5 text-xl font-bold text-gray-900 tracking-tight">
+        <h3 className="mb-3 text-[22px] font-semibold text-[#0F1419] tracking-[-0.5px]">
           {title}
         </h3>
 
         {/* Description */}
-        <p className="mb-6 flex-grow text-sm text-gray-600 leading-relaxed">
+        <p className="mb-6 flex-grow text-[14px] text-[#6B7280] leading-relaxed">
           {description}
         </p>
 
         {/* Action Button */}
         <button
-          className="w-full rounded-lg bg-indigo-600 px-5 py-3 text-sm font-semibold text-white transition-all duration-200 hover:bg-indigo-700 hover:scale-[1.02] hover:shadow-lg hover:shadow-indigo-600/30 active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2"
+          className="w-full rounded-lg bg-[#D4A574] px-6 py-3 text-[14px] font-semibold text-[#0F1419] transition-all duration-300 hover:bg-[#C89850] hover:shadow-md focus:outline-none focus:ring-2 focus:ring-[#D4A574] focus:ring-offset-2"
           aria-label={`Go to ${title}`}
         >
           Get Started

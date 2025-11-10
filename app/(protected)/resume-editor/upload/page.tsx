@@ -1,6 +1,6 @@
 /**
- * Resume Upload Page - Senior Design Engineer Level
- * Beautiful drag-and-drop file upload with smooth animations
+ * Resume Upload Page - Premium Design
+ * Sophisticated drag-and-drop file upload with elegant styling
  */
 
 'use client';
@@ -10,7 +10,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import { useResume } from '@/contexts/ResumeContext';
 import Navigation from '@/components/Navigation';
-import { Upload, File, CheckCircle, XCircle, Loader2 } from 'lucide-react';
+import { Upload, CheckCircle, XCircle, Loader2 } from 'lucide-react';
 
 export default function ResumeUploadPage() {
   const router = useRouter();
@@ -31,11 +31,7 @@ export default function ResumeUploadPage() {
     requireAuth();
   }, [requireAuth]);
 
-  /**
-   * Handle file selection
-   */
   const handleFileSelect = (selectedFile: File) => {
-    // Reset states
     setError(null);
     setSuccess(false);
 
@@ -60,9 +56,6 @@ export default function ResumeUploadPage() {
     uploadFile(selectedFile);
   };
 
-  /**
-   * Upload and parse file
-   */
   const uploadFile = async (fileToUpload: File) => {
     setLoading(true);
     setGlobalLoading(true);
@@ -83,11 +76,9 @@ export default function ResumeUploadPage() {
         throw new Error(data.error || 'Failed to parse resume');
       }
 
-      // Success! Set the resume data in context
       setResume(data.data);
       setSuccess(true);
 
-      // Redirect to review page after a short delay
       setTimeout(() => {
         router.push('/resume-editor/review');
       }, 1000);
@@ -101,25 +92,16 @@ export default function ResumeUploadPage() {
     }
   };
 
-  /**
-   * Handle drag over
-   */
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(true);
   };
 
-  /**
-   * Handle drag leave
-   */
   const handleDragLeave = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(false);
   };
 
-  /**
-   * Handle drop
-   */
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(false);
@@ -130,16 +112,10 @@ export default function ResumeUploadPage() {
     }
   };
 
-  /**
-   * Handle click to browse
-   */
   const handleClick = () => {
     fileInputRef.current?.click();
   };
 
-  /**
-   * Handle file input change
-   */
   const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
     if (selectedFile) {
@@ -148,20 +124,20 @@ export default function ResumeUploadPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#FAFBFC]">
+    <div className="min-h-screen bg-[#F8FAFB]">
       <Navigation />
 
-      <main className="mx-auto max-w-[800px] px-8 lg:px-10 py-12 lg:py-16">
+      <main className="mx-auto max-w-[900px] px-8 lg:px-10 py-16 lg:py-20">
         {/* Header */}
         <div
-          className={`text-center mb-12 transition-all duration-400 ease-out ${
+          className={`text-center mb-16 transition-all duration-400 ease-out ${
             mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
           }`}
         >
-          <h1 className="text-4xl font-bold text-gray-900 mb-3 tracking-tight -tracking-[0.5px]">
+          <h1 className="text-[48px] font-bold text-[#0F1419] mb-4 tracking-[-0.5px] leading-tight">
             Upload Your Resume
           </h1>
-          <p className="text-base text-gray-600 font-normal">
+          <p className="text-[16px] text-[#6B7280] font-medium">
             Drag and drop your resume or click to browse
           </p>
         </div>
@@ -178,20 +154,20 @@ export default function ResumeUploadPage() {
             onDragLeave={handleDragLeave}
             onDrop={handleDrop}
             onClick={handleClick}
-            className={`relative bg-white rounded-xl p-16 min-h-[300px] flex flex-col items-center justify-center cursor-pointer transition-all duration-200 ${
+            className={`relative bg-white rounded-xl p-20 min-h-[360px] flex flex-col items-center justify-center cursor-pointer transition-all duration-300 ${
               isDragging
-                ? 'border-2 border-solid border-indigo-600 bg-indigo-50 scale-[1.02] shadow-lg shadow-indigo-600/10'
-                : 'border-2 border-dashed border-gray-200 hover:border-indigo-600 hover:bg-indigo-50/50 hover:shadow-md'
+                ? 'border-2 border-solid border-[#D4A574] bg-[#FFFBF7] scale-[1.01] shadow-[0_8px_24px_rgba(212,165,116,0.15)]'
+                : 'border-2 border-dashed border-[#E5E7EB] hover:border-[#D4A574] hover:bg-[#FFFBF7] hover:shadow-[0_2px_8px_rgba(0,0,0,0.04)]'
             }`}
           >
             {/* Loading State */}
             {loading && (
               <div className="absolute inset-0 bg-white/95 rounded-xl flex flex-col items-center justify-center z-10">
-                <Loader2 className="h-12 w-12 text-indigo-600 animate-spin mb-4" />
-                <p className="text-base font-semibold text-gray-900 mb-2">
+                <Loader2 className="h-16 w-16 text-[#D4A574] animate-spin mb-6" />
+                <p className="text-[18px] font-semibold text-[#0F1419] mb-2">
                   Parsing your resume...
                 </p>
-                <p className="text-xs text-gray-600">
+                <p className="text-[14px] text-[#6B7280]">
                   Extracting data and organizing information
                 </p>
               </div>
@@ -200,11 +176,11 @@ export default function ResumeUploadPage() {
             {/* Success State */}
             {success && !loading && (
               <div className="absolute inset-0 bg-green-50 border-2 border-green-300 rounded-xl flex flex-col items-center justify-center z-10 animate-fade-in">
-                <CheckCircle className="h-12 w-12 text-green-600 mb-4" />
-                <p className="text-base font-semibold text-green-900">
+                <CheckCircle className="h-16 w-16 text-green-600 mb-6" />
+                <p className="text-[18px] font-semibold text-green-900">
                   Resume parsed successfully!
                 </p>
-                <p className="text-xs text-green-700 mt-2">
+                <p className="text-[14px] text-green-700 mt-2">
                   Redirecting to review page...
                 </p>
               </div>
@@ -213,11 +189,11 @@ export default function ResumeUploadPage() {
             {/* Error State */}
             {error && !loading && (
               <div className="absolute inset-0 bg-red-50 border-2 border-red-300 rounded-xl flex flex-col items-center justify-center z-10 p-8">
-                <XCircle className="h-12 w-12 text-red-600 mb-4" />
-                <p className="text-base font-semibold text-red-900 mb-2">
+                <XCircle className="h-16 w-16 text-red-600 mb-6" />
+                <p className="text-[18px] font-semibold text-red-900 mb-2">
                   Upload Failed
                 </p>
-                <p className="text-sm text-red-700 text-center mb-4">
+                <p className="text-[14px] text-red-700 text-center mb-6">
                   {error}
                 </p>
                 <button
@@ -226,7 +202,7 @@ export default function ResumeUploadPage() {
                     setError(null);
                     setFile(null);
                   }}
-                  className="px-6 py-2 bg-red-600 text-white rounded-lg text-sm font-semibold hover:bg-red-700 transition-colors"
+                  className="px-8 py-3 bg-red-600 text-white rounded-lg text-[14px] font-semibold hover:bg-red-700 transition-colors duration-300"
                 >
                   Try Again
                 </button>
@@ -236,14 +212,14 @@ export default function ResumeUploadPage() {
             {/* Default State */}
             {!loading && !success && !error && (
               <>
-                <Upload className="h-12 w-12 text-indigo-600 mb-6" />
-                <p className="text-lg font-bold text-gray-900 mb-2">
+                <Upload className="h-16 w-16 text-[#D4A574] mb-8" strokeWidth={1.5} />
+                <p className="text-[24px] font-bold text-[#0F1419] mb-3 tracking-[-0.5px]">
                   {isDragging ? 'Drop your resume here' : 'Drop your resume here'}
                 </p>
-                <p className="text-sm text-gray-600 mb-6">
+                <p className="text-[14px] text-[#6B7280] mb-8">
                   or click to browse
                 </p>
-                <p className="text-xs text-gray-400">
+                <p className="text-[12px] text-[#9CA3AF] font-medium">
                   Supported: PDF, DOCX, TXT (Max 5MB)
                 </p>
               </>
@@ -260,11 +236,11 @@ export default function ResumeUploadPage() {
           </div>
 
           {/* Alternative Button */}
-          <div className="mt-6 text-center">
+          <div className="mt-8 text-center">
             <button
               onClick={handleClick}
               disabled={loading}
-              className="px-8 py-3 bg-indigo-600 text-white rounded-lg text-sm font-semibold transition-all duration-200 hover:bg-indigo-700 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-indigo-600/30 active:translate-y-0 active:shadow-md disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none"
+              className="px-10 py-3.5 bg-[#D4A574] text-[#0F1419] rounded-lg text-[14px] font-semibold transition-all duration-300 hover:bg-[#C89850] hover:-translate-y-0.5 hover:shadow-lg hover:shadow-[#D4A574]/30 active:translate-y-0 active:shadow-md disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none"
             >
               {loading ? 'Processing...' : 'Choose File'}
             </button>

@@ -1,6 +1,6 @@
 /**
- * Navigation Component - Senior Design Engineer Level
- * Professional header navigation with user info and logout
+ * Navigation Component - Premium Design
+ * Sophisticated header with elegant styling
  */
 
 'use client';
@@ -11,9 +11,6 @@ import { LogOut } from 'lucide-react';
 export default function Navigation() {
   const { user, logout } = useAuth();
 
-  /**
-   * Get user initials from name
-   */
   const getInitials = (name: string): string => {
     return name
       .split(' ')
@@ -24,12 +21,12 @@ export default function Navigation() {
   };
 
   return (
-    <nav className="sticky top-0 z-50 bg-white border-b border-gray-200 shadow-sm">
-      <div className="mx-auto max-w-7xl px-8 lg:px-10">
-        <div className="flex h-16 items-center justify-between">
+    <nav className="sticky top-0 z-50 bg-white border-b border-[#E5E7EB]">
+      <div className="mx-auto max-w-[1200px] px-8 lg:px-10">
+        <div className="flex h-20 items-center justify-between">
           {/* Logo/Brand */}
           <div className="flex items-center">
-            <h1 className="text-2xl font-bold text-indigo-600 tracking-tight cursor-pointer">
+            <h1 className="text-[28px] font-bold text-[#0F1419] tracking-[-0.5px] cursor-pointer">
               PortfolioMaker
             </h1>
           </div>
@@ -39,11 +36,11 @@ export default function Navigation() {
             {/* User Info */}
             <div className="flex items-center space-x-3">
               {/* User Avatar with Initials */}
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-indigo-100 text-indigo-600 font-semibold text-sm">
+              <div className="flex h-11 w-11 items-center justify-center rounded-full bg-[#D4A574] text-[#0F1419] font-semibold text-[14px]">
                 {user ? getInitials(user.name) : 'U'}
               </div>
               {/* User Name */}
-              <span className="hidden sm:inline-block text-sm font-medium text-gray-900">
+              <span className="hidden sm:inline-block text-[14px] font-semibold text-[#0F1419]">
                 {user?.name || 'User'}
               </span>
             </div>
@@ -51,10 +48,10 @@ export default function Navigation() {
             {/* Logout Button */}
             <button
               onClick={logout}
-              className="flex items-center space-x-2 rounded-md bg-gray-100 border border-gray-200 px-4 py-2 text-sm font-medium text-gray-900 transition-all duration-150 hover:bg-gray-200 hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2"
+              className="flex items-center space-x-2 rounded-lg border border-[#E5E7EB] px-4 py-2.5 text-[14px] font-semibold text-[#0F1419] transition-all duration-300 hover:bg-[#F8FAFB] hover:border-[#D4A574] focus:outline-none focus:ring-2 focus:ring-[#D4A574] focus:ring-offset-2"
               aria-label="Logout"
             >
-              <LogOut className="h-4 w-4" />
+              <LogOut className="h-[18px] w-[18px]" />
               <span className="hidden sm:inline">Logout</span>
             </button>
           </div>

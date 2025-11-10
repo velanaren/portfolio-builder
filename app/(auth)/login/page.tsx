@@ -1,6 +1,6 @@
 /**
- * Login Page - Senior Design Engineer Level
- * Beautiful 55/45 split-screen with stunning gradient hero and clean form
+ * Login Page - Premium Design
+ * Inspired by CRED.club - Sophisticated, elegant, modern
  */
 
 'use client';
@@ -28,25 +28,16 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [mounted, setMounted] = useState(false);
 
-  /**
-   * Handle mount animation trigger
-   */
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  /**
-   * Redirect to dashboard if already authenticated
-   */
   useEffect(() => {
     if (!authLoading && isAuthenticated) {
       router.push('/dashboard');
     }
   }, [isAuthenticated, authLoading, router]);
 
-  /**
-   * Handle form submission
-   */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -54,7 +45,6 @@ export default function LoginPage() {
 
     try {
       await login(credentials);
-      // Navigation happens in the login function
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Login failed');
     } finally {
@@ -62,9 +52,6 @@ export default function LoginPage() {
     }
   };
 
-  /**
-   * Handle input changes
-   */
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setCredentials(prev => ({
@@ -75,65 +62,55 @@ export default function LoginPage() {
 
   return (
     <div className="flex min-h-screen">
-      {/* Hero Section (Left 55%) - Gradient Background */}
+      {/* Hero Section (Left 55%) - Dark Navy Gradient */}
       <div
-        className={`hidden lg:flex lg:w-[55%] bg-gradient-to-br from-indigo-600 to-pink-500 p-12 text-white flex-col justify-center transition-opacity duration-600 ${
+        className={`hidden lg:flex lg:w-[55%] bg-gradient-to-br from-[#1A1F2E] to-[#0F1419] p-16 text-white flex-col justify-center transition-opacity duration-600 ${
           mounted ? 'opacity-100' : 'opacity-0'
         }`}
       >
-        <div className="max-w-lg mx-auto">
-          {/* App Name - Fade in first */}
+        <div className="max-w-[520px] mx-auto">
+          {/* App Name */}
           <h1
-            className={`text-5xl font-bold text-white mb-3 tracking-tight transition-all duration-400 ${
+            className={`text-[48px] font-bold text-white mb-4 tracking-[-0.5px] leading-tight transition-all duration-400 ${
               mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
             }`}
             style={{ transitionDelay: '100ms' }}
           >
-            PortfolioMaker
+            Build Your Professional Portfolio
           </h1>
 
-          {/* Tagline - Fade in after title */}
+          {/* Tagline */}
           <p
-            className={`text-lg font-normal text-white/90 mb-10 leading-relaxed transition-all duration-400 ${
+            className={`text-[18px] font-normal text-white/90 mb-16 leading-relaxed transition-all duration-400 ${
               mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
             }`}
             style={{ transitionDelay: '250ms' }}
           >
-            Build your professional portfolio with AI
+            Create stunning portfolios powered by artificial intelligence
           </p>
 
-          {/* Features List - Staggered fade in */}
-          <ul className="space-y-4">
+          {/* Features List - Gold Accent Circles */}
+          <div className="space-y-6">
             {[
               { text: 'AI-powered resume optimization', delay: '350ms' },
               { text: 'Instant cover letter generation', delay: '450ms' },
               { text: 'Smart skill matching analysis', delay: '550ms' },
               { text: 'Beautiful portfolio creation', delay: '650ms' },
             ].map((item, index) => (
-              <li
+              <div
                 key={index}
-                className={`flex items-center space-x-3 transition-all duration-400 ${
+                className={`flex items-center space-x-4 transition-all duration-400 ${
                   mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
                 }`}
                 style={{ transitionDelay: item.delay }}
               >
-                <svg
-                  className="h-5 w-5 flex-shrink-0 text-white"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2.5}
-                    d="M5 13l4 4L19 7"
-                  />
-                </svg>
-                <span className="text-base text-white/95">{item.text}</span>
-              </li>
+                <div className="flex-shrink-0 w-2 h-2 rounded-full bg-[#D4A574]" />
+                <span className="text-[16px] text-white/95 font-normal leading-relaxed">
+                  {item.text}
+                </span>
+              </div>
             ))}
-          </ul>
+          </div>
         </div>
       </div>
 
@@ -144,32 +121,32 @@ export default function LoginPage() {
         }`}
         style={{ transitionDelay: '300ms' }}
       >
-        <div className="w-full max-w-[420px]">
+        <div className="w-full max-w-[420px] px-4">
           {/* Mobile Header */}
-          <div className="lg:hidden text-center mb-8">
-            <h1 className="text-3xl font-bold text-indigo-600 mb-2">
+          <div className="lg:hidden text-center mb-10">
+            <h1 className="text-[32px] font-bold text-[#0F1419] mb-2 tracking-[-0.5px]">
               PortfolioMaker
             </h1>
-            <p className="text-sm text-gray-600 font-medium">Welcome back</p>
+            <p className="text-[14px] text-[#6B7280] font-medium">Welcome back</p>
           </div>
 
           {/* Desktop Header */}
-          <div className="hidden lg:block mb-8">
-            <h2 className="text-[32px] font-bold text-gray-900 mb-2 tracking-tight">
-              Welcome back
+          <div className="hidden lg:block mb-10">
+            <h2 className="text-[32px] font-bold text-[#0F1419] mb-2 tracking-[-0.5px]">
+              Welcome Back
             </h2>
-            <p className="text-sm text-gray-600 font-medium">
+            <p className="text-[16px] text-[#6B7280] font-medium">
               Log in to your account
             </p>
           </div>
 
           {/* Login Form */}
-          <form onSubmit={handleSubmit} className="space-y-5">
+          <form onSubmit={handleSubmit} className="space-y-6">
             {/* Email Input */}
             <div>
               <label
                 htmlFor="email"
-                className="block text-xs font-semibold text-gray-900 mb-2 tracking-wide uppercase"
+                className="block text-[14px] font-semibold text-[#0F1419] mb-2.5"
               >
                 Email
               </label>
@@ -181,7 +158,7 @@ export default function LoginPage() {
                 onChange={handleChange}
                 placeholder="name@example.com"
                 required
-                className="w-full rounded-lg bg-gray-50 px-4 py-3 text-sm text-gray-900 border border-gray-200 focus:bg-white focus:border-indigo-600 focus:ring-3 focus:ring-indigo-600/10 transition-all duration-200 outline-none placeholder:text-gray-400"
+                className="w-full rounded-lg bg-[#F8FAFB] px-4 py-3.5 text-[14px] text-[#0F1419] border border-[#E5E7EB] focus:bg-white focus:border-[#D4A574] focus:ring-2 focus:ring-[#D4A574]/20 transition-all duration-300 outline-none placeholder:text-[#9CA3AF]"
               />
             </div>
 
@@ -189,7 +166,7 @@ export default function LoginPage() {
             <div>
               <label
                 htmlFor="password"
-                className="block text-xs font-semibold text-gray-900 mb-2 tracking-wide uppercase"
+                className="block text-[14px] font-semibold text-[#0F1419] mb-2.5"
               >
                 Password
               </label>
@@ -202,12 +179,12 @@ export default function LoginPage() {
                   onChange={handleChange}
                   placeholder="••••••••"
                   required
-                  className="w-full rounded-lg bg-gray-50 px-4 py-3 pr-11 text-sm text-gray-900 border border-gray-200 focus:bg-white focus:border-indigo-600 focus:ring-3 focus:ring-indigo-600/10 transition-all duration-200 outline-none placeholder:text-gray-400"
+                  className="w-full rounded-lg bg-[#F8FAFB] px-4 py-3.5 pr-11 text-[14px] text-[#0F1419] border border-[#E5E7EB] focus:bg-white focus:border-[#D4A574] focus:ring-2 focus:ring-[#D4A574]/20 transition-all duration-300 outline-none placeholder:text-[#9CA3AF]"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-900 transition-colors duration-150"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#6B7280] hover:text-[#0F1419] transition-colors duration-300"
                   aria-label={showPassword ? 'Hide password' : 'Show password'}
                 >
                   {showPassword ? (
@@ -221,8 +198,8 @@ export default function LoginPage() {
 
             {/* Error Message */}
             {error && (
-              <div className="rounded-lg bg-red-50 border border-red-200 p-3 animate-fade-in">
-                <p className="text-sm text-red-600 font-medium">{error}</p>
+              <div className="rounded-lg bg-red-50 border border-red-200 p-3.5 animate-fade-in">
+                <p className="text-[14px] text-red-600 font-medium">{error}</p>
               </div>
             )}
 
@@ -230,7 +207,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full mt-6 rounded-lg bg-indigo-600 px-6 py-3 text-[15px] font-semibold text-white transition-all duration-200 hover:bg-indigo-700 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-indigo-600/30 active:translate-y-0 active:shadow-md disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2"
+              className="w-full mt-2 rounded-lg bg-[#D4A574] px-6 py-3 text-[14px] font-semibold text-[#0F1419] transition-all duration-300 hover:bg-[#C89850] hover:-translate-y-0.5 hover:shadow-lg hover:shadow-[#D4A574]/30 active:translate-y-0 active:shadow-md disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none focus:outline-none focus:ring-2 focus:ring-[#D4A574] focus:ring-offset-2"
             >
               {isLoading ? (
                 <span className="flex items-center justify-center">
@@ -243,12 +220,12 @@ export default function LoginPage() {
             </button>
 
             {/* Sign Up Link */}
-            <div className="text-center mt-5">
-              <p className="text-sm text-gray-600">
+            <div className="text-center mt-6">
+              <p className="text-[14px] text-[#6B7280]">
                 Don&apos;t have an account?{' '}
                 <Link
                   href="/signup"
-                  className="font-semibold text-indigo-600 hover:text-indigo-700 hover:underline transition-all duration-150"
+                  className="font-semibold text-[#0F1419] hover:text-[#D4A574] transition-colors duration-300"
                 >
                   Sign up
                 </Link>

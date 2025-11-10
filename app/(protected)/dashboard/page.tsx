@@ -1,6 +1,6 @@
 /**
- * Dashboard Page - Senior Design Engineer Level
- * Beautiful dashboard with staggered card animations
+ * Dashboard Page - Premium Design
+ * Sophisticated dashboard with elegant card layout
  */
 
 'use client';
@@ -15,35 +15,28 @@ export default function DashboardPage() {
   const { user, requireAuth, isLoading } = useAuth();
   const [mounted, setMounted] = useState(false);
 
-  /**
-   * Handle mount animation trigger
-   */
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  /**
-   * Require authentication on mount
-   */
   useEffect(() => {
     requireAuth();
   }, [requireAuth]);
 
-  // Show loading state
   if (isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-50">
+      <div className="flex min-h-screen items-center justify-center bg-[#F8FAFB]">
         <div className="text-center">
-          <div className="h-12 w-12 animate-spin rounded-full border-4 border-indigo-600 border-t-transparent mx-auto mb-4"></div>
-          <p className="text-sm text-gray-600 font-medium">Loading...</p>
+          <div className="h-12 w-12 animate-spin rounded-full border-4 border-[#D4A574] border-t-transparent mx-auto mb-4"></div>
+          <p className="text-[14px] text-[#6B7280] font-medium">Loading...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#FAFBFC]">
-      {/* Navigation Header - Fade in from top */}
+    <div className="min-h-screen bg-[#F8FAFB]">
+      {/* Navigation Header */}
       <div
         className={`transition-all duration-500 ease-out ${
           mounted ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-5'
@@ -53,23 +46,23 @@ export default function DashboardPage() {
       </div>
 
       {/* Main Content */}
-      <main className="mx-auto max-w-[1280px] px-8 lg:px-10 py-12 lg:py-16">
-        {/* Welcome Section - Fade in after header */}
+      <main className="mx-auto max-w-[1200px] px-8 lg:px-10 py-16 lg:py-20">
+        {/* Welcome Section */}
         <div
-          className={`mb-12 transition-all duration-400 ease-out ${
+          className={`mb-16 transition-all duration-400 ease-out ${
             mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
           }`}
           style={{ transitionDelay: '100ms' }}
         >
-          <h1 className="text-4xl font-bold text-gray-900 mb-3 tracking-tight -tracking-[0.5px]">
-            Welcome back, {user?.name || 'User'}!
+          <h1 className="text-[40px] font-bold text-[#0F1419] mb-3 tracking-[-0.5px] leading-tight">
+            Welcome back, {user?.name || 'User'}
           </h1>
-          <p className="text-base text-gray-600 font-normal">
-            Choose what you&apos;d like to do today
+          <p className="text-[16px] text-[#6B7280] font-medium">
+            Select what to do today
           </p>
         </div>
 
-        {/* Feature Cards Grid - Staggered entrance */}
+        {/* Feature Cards Grid */}
         <div className="grid gap-6 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2">
           {/* Card 1: Resume Editor */}
           <FeatureCard
@@ -110,12 +103,12 @@ export default function DashboardPage() {
 
         {/* Additional Info Section */}
         <div
-          className={`mt-12 text-center transition-all duration-400 ease-out ${
+          className={`mt-16 text-center transition-all duration-400 ease-out ${
             mounted ? 'opacity-100' : 'opacity-0'
           }`}
           style={{ transitionDelay: '600ms' }}
         >
-          <p className="text-xs text-gray-500">
+          <p className="text-[12px] text-[#9CA3AF] font-medium">
             All tools are powered by AI to help you land your dream job
           </p>
         </div>
