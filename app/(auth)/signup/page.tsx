@@ -1,7 +1,6 @@
 /**
- * Signup Page
- * Beautiful split-screen signup page with validation
- * Includes real-time form validation and password visibility toggle
+ * Signup Page - Senior Design Engineer Level
+ * Beautiful 55/45 split-screen matching login page aesthetics
  */
 
 'use client';
@@ -12,7 +11,7 @@ import Link from 'next/link';
 import { useAuth } from '@/hooks/useAuth';
 import { SignupCredentials, FormErrors } from '@/types';
 import { validateEmail, validatePassword } from '@/lib/auth';
-import { Loader2, CheckCircle2, Eye, EyeOff, XCircle } from 'lucide-react';
+import { Loader2, Eye, EyeOff, CheckCircle2 } from 'lucide-react';
 
 export default function SignupPage() {
   const router = useRouter();
@@ -34,6 +33,14 @@ export default function SignupPage() {
   const [touched, setTouched] = useState<{ [key: string]: boolean }>({});
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  /**
+   * Handle mount animation trigger
+   */
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   /**
    * Redirect to dashboard if already authenticated
@@ -57,13 +64,13 @@ export default function SignupPage() {
 
       case 'email':
         if (typeof value === 'string' && !validateEmail(value)) {
-          return 'Please enter a valid email address';
+          return 'Please enter a valid email';
         }
         return '';
 
       case 'password':
         if (typeof value === 'string' && !validatePassword(value)) {
-          return 'Password must be at least 8 characters';
+          return 'Must be at least 8 characters';
         }
         return '';
 
@@ -75,7 +82,7 @@ export default function SignupPage() {
 
       case 'agreeToTerms':
         if (!value) {
-          return 'You must agree to the terms and conditions';
+          return 'Required';
         }
         return '';
 
@@ -189,54 +196,93 @@ export default function SignupPage() {
 
   return (
     <div className="flex min-h-screen">
-      {/* Left Side - Gradient Background */}
-      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500 p-12 text-white flex-col justify-center">
-        <div className="max-w-md">
-          <h1 className="text-5xl font-bold mb-6">Join PortfolioMaker</h1>
-          <p className="text-xl mb-8 text-indigo-100">
-            Start building your professional portfolio today
+      {/* Hero Section (Left 55%) - Gradient Background */}
+      <div
+        className={`hidden lg:flex lg:w-[55%] bg-gradient-to-br from-indigo-600 to-pink-500 p-12 text-white flex-col justify-center transition-opacity duration-600 ${
+          mounted ? 'opacity-100' : 'opacity-0'
+        }`}
+      >
+        <div className="max-w-lg mx-auto">
+          {/* App Name */}
+          <h1
+            className={`text-5xl font-bold text-white mb-3 tracking-tight transition-all duration-400 ${
+              mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
+            }`}
+            style={{ transitionDelay: '100ms' }}
+          >
+            Join PortfolioMaker
+          </h1>
+
+          {/* Tagline */}
+          <p
+            className={`text-lg font-normal text-white/90 mb-10 leading-relaxed transition-all duration-400 ${
+              mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
+            }`}
+            style={{ transitionDelay: '250ms' }}
+          >
+            Start building your professional future today
           </p>
+
+          {/* Features List */}
           <ul className="space-y-4">
-            <li className="flex items-start space-x-3">
-              <CheckCircle2 className="h-6 w-6 flex-shrink-0 mt-0.5" />
-              <span className="text-lg">Free to get started</span>
-            </li>
-            <li className="flex items-start space-x-3">
-              <CheckCircle2 className="h-6 w-6 flex-shrink-0 mt-0.5" />
-              <span className="text-lg">AI-powered tools included</span>
-            </li>
-            <li className="flex items-start space-x-3">
-              <CheckCircle2 className="h-6 w-6 flex-shrink-0 mt-0.5" />
-              <span className="text-lg">No credit card required</span>
-            </li>
-            <li className="flex items-start space-x-3">
-              <CheckCircle2 className="h-6 w-6 flex-shrink-0 mt-0.5" />
-              <span className="text-lg">Cancel anytime</span>
-            </li>
+            {[
+              { text: 'Free to get started', delay: '350ms' },
+              { text: 'AI-powered tools included', delay: '450ms' },
+              { text: 'No credit card required', delay: '550ms' },
+              { text: 'Cancel anytime', delay: '650ms' },
+            ].map((item, index) => (
+              <li
+                key={index}
+                className={`flex items-center space-x-3 transition-all duration-400 ${
+                  mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
+                }`}
+                style={{ transitionDelay: item.delay }}
+              >
+                <svg
+                  className="h-5 w-5 flex-shrink-0 text-white"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2.5}
+                    d="M5 13l4 4L19 7"
+                  />
+                </svg>
+                <span className="text-base text-white/95">{item.text}</span>
+              </li>
+            ))}
           </ul>
         </div>
       </div>
 
-      {/* Right Side - Signup Form */}
-      <div className="flex w-full lg:w-1/2 items-center justify-center p-8 bg-white">
-        <div className="w-full max-w-md">
+      {/* Form Section (Right 45%) - White Background */}
+      <div
+        className={`flex w-full lg:w-[45%] items-center justify-center p-8 bg-white transition-opacity duration-400 ${
+          mounted ? 'opacity-100' : 'opacity-0'
+        }`}
+        style={{ transitionDelay: '300ms' }}
+      >
+        <div className="w-full max-w-[420px]">
           {/* Header */}
           <div className="mb-8">
-            <h2 className="text-3xl font-bold text-gray-900 mb-2">
-              Create your account
+            <h2 className="text-[32px] font-bold text-gray-900 mb-2 tracking-tight">
+              Create account
             </h2>
-            <p className="text-gray-600">
+            <p className="text-sm text-gray-600 font-medium">
               Get started with your portfolio builder
             </p>
           </div>
 
           {/* Signup Form */}
-          <form onSubmit={handleSubmit} className="space-y-5">
+          <form onSubmit={handleSubmit} className="space-y-4">
             {/* Full Name Input */}
             <div>
               <label
                 htmlFor="name"
-                className="block text-sm font-medium text-gray-700 mb-2"
+                className="block text-xs font-semibold text-gray-900 mb-2 tracking-wide uppercase"
               >
                 Full Name
               </label>
@@ -250,23 +296,20 @@ export default function SignupPage() {
                   onBlur={handleBlur}
                   placeholder="John Doe"
                   required
-                  className={`w-full rounded-lg bg-gray-50 px-4 py-3 text-sm text-gray-900 border transition-colors outline-none ${
+                  className={`w-full rounded-lg px-4 py-3 text-sm text-gray-900 border transition-all duration-200 outline-none placeholder:text-gray-400 ${
                     getFieldStatus('name') === 'error'
-                      ? 'border-red-300 focus:border-red-500 focus:ring-2 focus:ring-red-500'
+                      ? 'bg-red-50 border-red-300 focus:border-red-500 focus:ring-3 focus:ring-red-500/10'
                       : getFieldStatus('name') === 'success'
-                      ? 'border-green-300 focus:border-green-500 focus:ring-2 focus:ring-green-500'
-                      : 'border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500'
+                      ? 'bg-green-50 border-green-300 focus:border-green-500 focus:ring-3 focus:ring-green-500/10'
+                      : 'bg-gray-50 border-gray-200 focus:bg-white focus:border-indigo-600 focus:ring-3 focus:ring-indigo-600/10'
                   }`}
                 />
                 {getFieldStatus('name') === 'success' && (
-                  <CheckCircle2 className="absolute right-3 top-3 h-5 w-5 text-green-500" />
+                  <CheckCircle2 className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-green-500" />
                 )}
               </div>
               {touched.name && errors.name && (
-                <p className="mt-1 text-xs text-red-600 flex items-center">
-                  <XCircle className="h-3 w-3 mr-1" />
-                  {errors.name}
-                </p>
+                <p className="mt-1.5 text-xs text-red-600 font-medium">{errors.name}</p>
               )}
             </div>
 
@@ -274,7 +317,7 @@ export default function SignupPage() {
             <div>
               <label
                 htmlFor="email"
-                className="block text-sm font-medium text-gray-700 mb-2"
+                className="block text-xs font-semibold text-gray-900 mb-2 tracking-wide uppercase"
               >
                 Email
               </label>
@@ -286,25 +329,22 @@ export default function SignupPage() {
                   value={credentials.email}
                   onChange={handleChange}
                   onBlur={handleBlur}
-                  placeholder="your@email.com"
+                  placeholder="name@example.com"
                   required
-                  className={`w-full rounded-lg bg-gray-50 px-4 py-3 text-sm text-gray-900 border transition-colors outline-none ${
+                  className={`w-full rounded-lg px-4 py-3 text-sm text-gray-900 border transition-all duration-200 outline-none placeholder:text-gray-400 ${
                     getFieldStatus('email') === 'error'
-                      ? 'border-red-300 focus:border-red-500 focus:ring-2 focus:ring-red-500'
+                      ? 'bg-red-50 border-red-300 focus:border-red-500 focus:ring-3 focus:ring-red-500/10'
                       : getFieldStatus('email') === 'success'
-                      ? 'border-green-300 focus:border-green-500 focus:ring-2 focus:ring-green-500'
-                      : 'border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500'
+                      ? 'bg-green-50 border-green-300 focus:border-green-500 focus:ring-3 focus:ring-green-500/10'
+                      : 'bg-gray-50 border-gray-200 focus:bg-white focus:border-indigo-600 focus:ring-3 focus:ring-indigo-600/10'
                   }`}
                 />
                 {getFieldStatus('email') === 'success' && (
-                  <CheckCircle2 className="absolute right-3 top-3 h-5 w-5 text-green-500" />
+                  <CheckCircle2 className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-green-500" />
                 )}
               </div>
               {touched.email && errors.email && (
-                <p className="mt-1 text-xs text-red-600 flex items-center">
-                  <XCircle className="h-3 w-3 mr-1" />
-                  {errors.email}
-                </p>
+                <p className="mt-1.5 text-xs text-red-600 font-medium">{errors.email}</p>
               )}
             </div>
 
@@ -312,7 +352,7 @@ export default function SignupPage() {
             <div>
               <label
                 htmlFor="password"
-                className="block text-sm font-medium text-gray-700 mb-2"
+                className="block text-xs font-semibold text-gray-900 mb-2 tracking-wide uppercase"
               >
                 Password
               </label>
@@ -326,31 +366,29 @@ export default function SignupPage() {
                   onBlur={handleBlur}
                   placeholder="••••••••"
                   required
-                  className={`w-full rounded-lg bg-gray-50 px-4 py-3 pr-10 text-sm text-gray-900 border transition-colors outline-none ${
+                  className={`w-full rounded-lg px-4 py-3 pr-11 text-sm text-gray-900 border transition-all duration-200 outline-none placeholder:text-gray-400 ${
                     getFieldStatus('password') === 'error'
-                      ? 'border-red-300 focus:border-red-500 focus:ring-2 focus:ring-red-500'
+                      ? 'bg-red-50 border-red-300 focus:border-red-500 focus:ring-3 focus:ring-red-500/10'
                       : getFieldStatus('password') === 'success'
-                      ? 'border-green-300 focus:border-green-500 focus:ring-2 focus:ring-green-500'
-                      : 'border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500'
+                      ? 'bg-green-50 border-green-300 focus:border-green-500 focus:ring-3 focus:ring-green-500/10'
+                      : 'bg-gray-50 border-gray-200 focus:bg-white focus:border-indigo-600 focus:ring-3 focus:ring-indigo-600/10'
                   }`}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-3 text-gray-500 hover:text-gray-700"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-900 transition-colors duration-150"
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
                 >
                   {showPassword ? (
-                    <EyeOff className="h-5 w-5" />
+                    <EyeOff className="h-[18px] w-[18px]" />
                   ) : (
-                    <Eye className="h-5 w-5" />
+                    <Eye className="h-[18px] w-[18px]" />
                   )}
                 </button>
               </div>
               {touched.password && errors.password && (
-                <p className="mt-1 text-xs text-red-600 flex items-center">
-                  <XCircle className="h-3 w-3 mr-1" />
-                  {errors.password}
-                </p>
+                <p className="mt-1.5 text-xs text-red-600 font-medium">{errors.password}</p>
               )}
             </div>
 
@@ -358,7 +396,7 @@ export default function SignupPage() {
             <div>
               <label
                 htmlFor="confirmPassword"
-                className="block text-sm font-medium text-gray-700 mb-2"
+                className="block text-xs font-semibold text-gray-900 mb-2 tracking-wide uppercase"
               >
                 Confirm Password
               </label>
@@ -372,31 +410,29 @@ export default function SignupPage() {
                   onBlur={handleBlur}
                   placeholder="••••••••"
                   required
-                  className={`w-full rounded-lg bg-gray-50 px-4 py-3 pr-10 text-sm text-gray-900 border transition-colors outline-none ${
+                  className={`w-full rounded-lg px-4 py-3 pr-11 text-sm text-gray-900 border transition-all duration-200 outline-none placeholder:text-gray-400 ${
                     getFieldStatus('confirmPassword') === 'error'
-                      ? 'border-red-300 focus:border-red-500 focus:ring-2 focus:ring-red-500'
+                      ? 'bg-red-50 border-red-300 focus:border-red-500 focus:ring-3 focus:ring-red-500/10'
                       : getFieldStatus('confirmPassword') === 'success'
-                      ? 'border-green-300 focus:border-green-500 focus:ring-2 focus:ring-green-500'
-                      : 'border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500'
+                      ? 'bg-green-50 border-green-300 focus:border-green-500 focus:ring-3 focus:ring-green-500/10'
+                      : 'bg-gray-50 border-gray-200 focus:bg-white focus:border-indigo-600 focus:ring-3 focus:ring-indigo-600/10'
                   }`}
                 />
                 <button
                   type="button"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-3 top-3 text-gray-500 hover:text-gray-700"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-900 transition-colors duration-150"
+                  aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
                 >
                   {showConfirmPassword ? (
-                    <EyeOff className="h-5 w-5" />
+                    <EyeOff className="h-[18px] w-[18px]" />
                   ) : (
-                    <Eye className="h-5 w-5" />
+                    <Eye className="h-[18px] w-[18px]" />
                   )}
                 </button>
               </div>
               {touched.confirmPassword && errors.confirmPassword && (
-                <p className="mt-1 text-xs text-red-600 flex items-center">
-                  <XCircle className="h-3 w-3 mr-1" />
-                  {errors.confirmPassword}
-                </p>
+                <p className="mt-1.5 text-xs text-red-600 font-medium">{errors.confirmPassword}</p>
               )}
             </div>
 
@@ -410,38 +446,35 @@ export default function SignupPage() {
                   checked={credentials.agreeToTerms}
                   onChange={handleChange}
                   onBlur={handleBlur}
-                  className="h-4 w-4 mt-1 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                  className="h-4 w-4 mt-0.5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-600"
                 />
                 <label
                   htmlFor="agreeToTerms"
-                  className="ml-2 text-sm text-gray-700"
+                  className="ml-2 text-xs text-gray-700 leading-relaxed"
                 >
                   I agree to the{' '}
-                  <span className="text-indigo-600 hover:underline cursor-pointer">
+                  <span className="text-indigo-600 hover:underline cursor-pointer font-medium">
                     terms and conditions
                   </span>
                 </label>
               </div>
               {touched.agreeToTerms && errors.agreeToTerms && (
-                <p className="mt-1 text-xs text-red-600 flex items-center">
-                  <XCircle className="h-3 w-3 mr-1" />
-                  {errors.agreeToTerms}
-                </p>
+                <p className="mt-1.5 text-xs text-red-600 font-medium">{errors.agreeToTerms}</p>
               )}
             </div>
 
             {/* Error Message */}
             {error && (
-              <div className="rounded-lg bg-red-50 border border-red-200 p-3">
-                <p className="text-sm text-red-600">{error}</p>
+              <div className="rounded-lg bg-red-50 border border-red-200 p-3 animate-fade-in">
+                <p className="text-sm text-red-600 font-medium">{error}</p>
               </div>
             )}
 
-            {/* Signup Button */}
+            {/* Sign Up Button */}
             <button
               type="submit"
               disabled={isLoading || !isFormValid()}
-              className="w-full rounded-lg bg-indigo-600 px-6 py-3 text-sm font-semibold text-white transition-all duration-200 hover:bg-indigo-700 hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+              className="w-full mt-2 rounded-lg bg-indigo-600 px-6 py-3 text-[15px] font-semibold text-white transition-all duration-200 hover:bg-indigo-700 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-indigo-600/30 active:translate-y-0 active:shadow-md disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2"
             >
               {isLoading ? (
                 <span className="flex items-center justify-center">
@@ -449,19 +482,19 @@ export default function SignupPage() {
                   Creating account...
                 </span>
               ) : (
-                'Sign Up'
+                'Create account'
               )}
             </button>
 
             {/* Login Link */}
-            <div className="text-center">
+            <div className="text-center mt-5">
               <p className="text-sm text-gray-600">
                 Already have an account?{' '}
                 <Link
                   href="/login"
-                  className="font-semibold text-indigo-600 hover:text-indigo-700 hover:underline transition-colors"
+                  className="font-semibold text-indigo-600 hover:text-indigo-700 hover:underline transition-all duration-150"
                 >
-                  Login
+                  Sign in
                 </Link>
               </p>
             </div>
