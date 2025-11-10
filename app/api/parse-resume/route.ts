@@ -225,7 +225,9 @@ ${text}`;
 
   try {
     console.log('[GROQ] Calling Groq API...');
-    console.log('[GROQ] Model: mixtral-8x7b-32768');
+    // Updated: mixtral-8x7b-32768 (decommissioned) → llama-3.1-70b-versatile
+    // Latest Groq model as of 2024 - see https://console.groq.com/docs/models
+    console.log('[GROQ] Model: llama-3.1-70b-versatile');
 
     const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
@@ -234,7 +236,7 @@ ${text}`;
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'mixtral-8x7b-32768',
+        model: 'llama-3.1-70b-versatile', // Updated from mixtral-8x7b-32768 (decommissioned)
         messages: [
           {
             role: 'user',

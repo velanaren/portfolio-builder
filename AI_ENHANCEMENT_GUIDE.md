@@ -114,7 +114,7 @@ const completion = await groq.chat.completions.create({
       content: prompt,
     },
   ],
-  model: 'mixtral-8x7b-32768',
+  model: 'llama-3.1-70b-versatile', // Updated from mixtral-8x7b-32768 (decommissioned)
   temperature: 0.7,
   max_tokens: 500,
   top_p: 1,
@@ -122,6 +122,8 @@ const completion = await groq.chat.completions.create({
 
 const rewrittenText = completion.choices[0]?.message?.content || '';
 ```
+
+**Note**: The `mixtral-8x7b-32768` model was decommissioned by Groq. We now use `llama-3.1-70b-versatile` which provides excellent results. For faster responses, you can use `llama-3.1-8b-instant`.
 
 **Step 4d**: Return Enhanced Content
 ```typescript

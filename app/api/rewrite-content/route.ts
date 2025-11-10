@@ -178,8 +178,9 @@ export async function POST(request: NextRequest) {
      *
      * TO CHANGE MODEL:
      * Replace 'llama-3.3-70b-versatile' with:
-     * - 'mixtral-8x7b-32768' (faster, less creative)
-     * - 'llama-3.1-70b-versatile' (more creative)
+     * - 'llama-3.1-8b-instant' (faster, smaller model)
+     * - 'llama-3.1-70b-versatile' (alternative large model)
+     * Note: mixtral-8x7b-32768 was decommissioned - use llama models instead
      * See: https://console.groq.com/docs/models
      */
     const chatCompletion = await groq.chat.completions.create({
