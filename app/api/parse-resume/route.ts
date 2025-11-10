@@ -95,8 +95,20 @@ async function parseResumeWithGroq(text: string): Promise<any> {
         {
           id: "proj_1",
           name: "E-commerce Platform",
-          description: "Built full-stack e-commerce platform with payment integration",
-          technologies: "React, Node.js, Stripe"
+          description: "Built full-stack e-commerce platform with payment integration and real-time inventory management. Implemented user authentication, shopping cart functionality, and integrated Stripe for secure payments.",
+          technologies: ["React", "Node.js", "Express", "MongoDB", "Stripe API", "Redis"],
+          url: "https://github.com/johndoe/ecommerce-platform",
+          startDate: "Jun 2022",
+          endDate: "Dec 2022"
+        },
+        {
+          id: "proj_2",
+          name: "Task Management App",
+          description: "Developed collaborative task management application with drag-and-drop interface. Features include team workspaces, real-time updates, and deadline notifications.",
+          technologies: ["React", "TypeScript", "Firebase", "Material-UI"],
+          url: "https://taskapp.example.com",
+          startDate: "Jan 2021",
+          endDate: "May 2021"
         }
       ],
       certifications: [
@@ -112,7 +124,14 @@ async function parseResumeWithGroq(text: string): Promise<any> {
 
   const prompt = `Extract all resume information from this text and return ONLY valid JSON.
 Extract: name, email, phone, location, summary, work experience (company, position, dates, description),
-education (institution, degree, field, graduation date), skills, projects, certifications.
+education (institution, degree, field, graduation date), skills, projects (with name, description, technologies as array, url, dates), certifications.
+
+IMPORTANT: For projects, extract:
+- Project name
+- Detailed description
+- Technologies as an ARRAY (not string)
+- Project URL/link if mentioned
+- Start and end dates if mentioned
 
 Return JSON in this exact format (only return JSON, no other text):
 {
@@ -144,7 +163,17 @@ Return JSON in this exact format (only return JSON, no other text):
     }
   ],
   "skills": [],
-  "projects": [],
+  "projects": [
+    {
+      "id": "proj_1",
+      "name": "",
+      "description": "",
+      "technologies": [],
+      "url": "",
+      "startDate": "",
+      "endDate": ""
+    }
+  ],
   "certifications": []
 }
 

@@ -16,6 +16,7 @@ import SummarySection from '@/components/resume-sections/SummarySection';
 import WorkExperienceSection from '@/components/resume-sections/WorkExperienceSection';
 import EducationSection from '@/components/resume-sections/EducationSection';
 import SkillsSection from '@/components/resume-sections/SkillsSection';
+import ProjectsSection from '@/components/resume-sections/ProjectsSection';
 import ResumePreview from '@/components/ResumePreview';
 
 export default function ResumeEditPage() {
@@ -232,6 +233,11 @@ export default function ResumeEditPage() {
                 summary={resume.summary}
               />
 
+              <ProjectsSection
+                projects={resume.projects || []}
+                onChange={(projects) => setResume({ ...resume, projects })}
+              />
+
               {/* Bottom Actions */}
               <div className="flex gap-4 pt-6 border-t border-[#E5E7EB]">
                 <button
@@ -289,6 +295,11 @@ export default function ResumeEditPage() {
                 skills={resume.skills}
                 onChange={(skills) => setResume({ ...resume, skills })}
                 summary={resume.summary}
+              />
+
+              <ProjectsSection
+                projects={resume.projects || []}
+                onChange={(projects) => setResume({ ...resume, projects })}
               />
 
               {/* Bottom Actions */}

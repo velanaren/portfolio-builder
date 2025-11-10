@@ -211,15 +211,27 @@ export default function ResumePreview({ resume }: ResumePreviewProps) {
               </h2>
               {resume.projects.map((project) => (
                 <div key={project.id} className="mb-3">
-                  <h3 className="text-xs font-bold mb-1" style={{ color: currentTheme.bodyText }}>
-                    {project.name}
-                  </h3>
-                  <p className="text-xs leading-relaxed" style={{ color: currentTheme.bodyText }}>
+                  <div className="flex justify-between items-start mb-1">
+                    <h3 className="text-xs font-bold" style={{ color: currentTheme.bodyText }}>
+                      {project.name}
+                    </h3>
+                    {(project.startDate || project.endDate) && (
+                      <span className="text-xs" style={{ color: currentTheme.accent }}>
+                        {project.startDate} {project.endDate && `- ${project.endDate}`}
+                      </span>
+                    )}
+                  </div>
+                  {project.technologies && project.technologies.length > 0 && (
+                    <p className="text-xs mb-1" style={{ color: currentTheme.accent }}>
+                      {project.technologies.join(' • ')}
+                    </p>
+                  )}
+                  <p className="text-xs leading-relaxed whitespace-pre-wrap" style={{ color: currentTheme.bodyText }}>
                     {project.description}
                   </p>
-                  {project.technologies && (
-                    <p className="text-xs mt-1" style={{ color: currentTheme.accent }}>
-                      Technologies: {project.technologies}
+                  {project.url && (
+                    <p className="text-xs mt-1 opacity-70" style={{ color: currentTheme.accent }}>
+                      {project.url}
                     </p>
                   )}
                 </div>

@@ -109,7 +109,10 @@ export interface Project {
   id: string;
   name: string;
   description: string;
-  technologies?: string;
+  technologies: string[]; // Array of technologies used
+  url?: string; // Project URL/link
+  startDate?: string; // Project start date
+  endDate?: string; // Project end date
 }
 
 /**
