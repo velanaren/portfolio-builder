@@ -77,3 +77,83 @@ export interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
 }
+
+/**
+ * WorkExperience - Represents a work experience entry
+ */
+export interface WorkExperience {
+  id: string;
+  company: string;
+  position: string;
+  startDate: string;
+  endDate: string;
+  current: boolean;
+  description: string;
+}
+
+/**
+ * Education - Represents an education entry
+ */
+export interface Education {
+  id: string;
+  institution: string;
+  degree: string;
+  field: string;
+  graduationDate: string;
+}
+
+/**
+ * Project - Represents a project entry
+ */
+export interface Project {
+  id: string;
+  name: string;
+  description: string;
+  technologies?: string;
+}
+
+/**
+ * Certification - Represents a certification entry
+ */
+export interface Certification {
+  id: string;
+  name: string;
+  issuer: string;
+  date?: string;
+}
+
+/**
+ * PersonalInfo - Personal information from resume
+ */
+export interface PersonalInfo {
+  name: string;
+  email: string;
+  phone: string;
+  location: string;
+  linkedIn?: string;
+}
+
+/**
+ * ParsedResume - Complete parsed resume data structure
+ */
+export interface ParsedResume {
+  personalInfo: PersonalInfo;
+  summary: string;
+  experience: WorkExperience[];
+  education: Education[];
+  skills: string[];
+  projects?: Project[];
+  certifications?: Certification[];
+}
+
+/**
+ * ResumeContextType - Type for resume context
+ */
+export interface ResumeContextType {
+  resume: ParsedResume | null;
+  setResume: (resume: ParsedResume | null) => void;
+  loading: boolean;
+  setLoading: (loading: boolean) => void;
+  error: string | null;
+  setError: (error: string | null) => void;
+}
