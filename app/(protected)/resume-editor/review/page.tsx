@@ -32,6 +32,14 @@ export default function ResumeReviewPage() {
       router.push('/resume-editor/upload');
     } else if (resume) {
       setEditedResume(resume);
+      // Debug: Log resume data to help identify parsing issues
+      console.log('[Review Page] Resume loaded:', resume);
+      console.log('[Review Page] Projects count:', resume.projects?.length || 0);
+      if (resume.projects && resume.projects.length > 0) {
+        console.log('[Review Page] Projects data:', resume.projects);
+      } else {
+        console.log('[Review Page] No projects found in parsed resume');
+      }
     }
   }, [resume, mounted, router]);
 
@@ -129,6 +137,38 @@ export default function ResumeReviewPage() {
     setEditedResume({
       ...editedResume,
       education: editedResume.education.filter(edu => edu.id !== id),
+    });
+  };
+
+  const handleProjectChange = (id: string, field: keyof Project, value: any) => {
+    setEditedResume({
+      ...editedResume,
+      projects: (editedResume.projects || []).map(proj =>
+        proj.id === id ? { ...proj, [field]: value } : proj
+      ),
+    });
+  };
+
+  const addProject = () => {
+    const newProject: Project = {
+      id: `proj_${Date.now()}`,
+      name: '',
+      description: '',
+      technologies: [],
+      url: '',
+      startDate: '',
+      endDate: '',
+    };
+    setEditedResume({
+      ...editedResume,
+      projects: [...(editedResume.projects || []), newProject],
+    });
+  };
+
+  const deleteProject = (id: string) => {
+    setEditedResume({
+      ...editedResume,
+      projects: (editedResume.projects || []).filter(proj => proj.id !== id),
     });
   };
 
@@ -380,6 +420,107 @@ export default function ResumeReviewPage() {
                   placeholder="Enter skills separated by commas"
                   className="w-full rounded-lg bg-[#F8FAFB] px-4 py-3 text-sm text-[#0F1419] border border-[#E5E7EB] focus:bg-white focus:border-[#D4A574] focus:ring-3 focus:ring-[#D4A574]/10 transition-all duration-200 outline-none resize-none"
                 />
+              </section>
+
+              {/* Projects */}
+              <section>
+                <div className="flex items-center justify-between mb-6 pb-2 border-b-2 border-[#D4A574]">
+                  <h2 className="text-[20px] font-semibold text-[#0F1419] tracking-[-0.5px]">Projects</h2>
+                  <button
+                    onClick={addProject}
+                    className="flex items-center space-x-2 text-sm font-semibold text-[#D4A574] hover:text-[#C89850] transition-colors"
+                  >
+                    <Plus className="h-4 w-4" />
+                    <span>Add Project</span>
+                  </button>
+                </div>
+                {editedResume.projects && editedResume.projects.length > 0 ? (
+                  <div className="space-y-6">
+                    {editedResume.projects.map((project, index) => (
+                      <div key={project.id} className="p-4 border border-[#E5E7EB] rounded-lg border-l-4 border-l-[#D4A574]">
+                        <div className="flex justify-between items-start mb-4">
+                          <h3 className="text-sm font-semibold text-[#0F1419]">Project {index + 1}</h3>
+                          <button
+                            onClick={() => deleteProject(project.id)}
+                            className="text-red-600 hover:text-red-700 transition-colors"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </div>
+                        <div className="grid grid-cols-1 gap-4">
+                          <div>
+                            <label className="block text-xs font-semibold text-[#0F1419] mb-2">Project Name</label>
+                            <input
+                              type="text"
+                              value={project.name}
+                              onChange={(e) => handleProjectChange(project.id, 'name', e.target.value)}
+                              className="w-full rounded-lg bg-[#F8FAFB] px-3 py-2 text-sm border border-[#E5E7EB] focus:border-[#D4A574] focus:ring-2 focus:ring-[#D4A574]/10 transition-all outline-none"
+                              placeholder="e.g., E-commerce Platform"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-semibold text-[#0F1419] mb-2">Description</label>
+                            <textarea
+                              value={project.description}
+                              onChange={(e) => handleProjectChange(project.id, 'description', e.target.value)}
+                              rows={4}
+                              className="w-full rounded-lg bg-[#F8FAFB] px-3 py-2 text-sm border border-[#E5E7EB] focus:border-[#D4A574] focus:ring-2 focus:ring-[#D4A574]/10 transition-all outline-none resize-none"
+                              placeholder="Describe the project, your role, and achievements"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-semibold text-[#0F1419] mb-2">Technologies (comma-separated)</label>
+                            <input
+                              type="text"
+                              value={Array.isArray(project.technologies) ? project.technologies.join(', ') : ''}
+                              onChange={(e) => handleProjectChange(project.id, 'technologies', e.target.value.split(',').map(t => t.trim()).filter(t => t))}
+                              className="w-full rounded-lg bg-[#F8FAFB] px-3 py-2 text-sm border border-[#E5E7EB] focus:border-[#D4A574] focus:ring-2 focus:ring-[#D4A574]/10 transition-all outline-none"
+                              placeholder="e.g., React, Node.js, MongoDB"
+                            />
+                          </div>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                              <label className="block text-xs font-semibold text-[#0F1419] mb-2">Project URL (optional)</label>
+                              <input
+                                type="url"
+                                value={project.url || ''}
+                                onChange={(e) => handleProjectChange(project.id, 'url', e.target.value)}
+                                className="w-full rounded-lg bg-[#F8FAFB] px-3 py-2 text-sm border border-[#E5E7EB] focus:border-[#D4A574] focus:ring-2 focus:ring-[#D4A574]/10 transition-all outline-none"
+                                placeholder="https://github.com/..."
+                              />
+                            </div>
+                            <div className="grid grid-cols-2 gap-2">
+                              <div>
+                                <label className="block text-xs font-semibold text-[#0F1419] mb-2">Start Date</label>
+                                <input
+                                  type="text"
+                                  value={project.startDate || ''}
+                                  onChange={(e) => handleProjectChange(project.id, 'startDate', e.target.value)}
+                                  className="w-full rounded-lg bg-[#F8FAFB] px-3 py-2 text-sm border border-[#E5E7EB] focus:border-[#D4A574] focus:ring-2 focus:ring-[#D4A574]/10 transition-all outline-none"
+                                  placeholder="Jan 2024"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-xs font-semibold text-[#0F1419] mb-2">End Date</label>
+                                <input
+                                  type="text"
+                                  value={project.endDate || ''}
+                                  onChange={(e) => handleProjectChange(project.id, 'endDate', e.target.value)}
+                                  className="w-full rounded-lg bg-[#F8FAFB] px-3 py-2 text-sm border border-[#E5E7EB] focus:border-[#D4A574] focus:ring-2 focus:ring-[#D4A574]/10 transition-all outline-none"
+                                  placeholder="Jun 2024"
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8 bg-[#F8FAFB] rounded-lg border border-[#E5E7EB]">
+                    <p className="text-sm text-[#6B7280]">No projects added yet. Click "Add Project" to add one.</p>
+                  </div>
+                )}
               </section>
             </div>
 
