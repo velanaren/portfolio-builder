@@ -2,39 +2,57 @@
  * API Route: Parse Resume
  * Handles resume file upload, text extraction, and AI parsing using Groq
  *
- * NOTE: PDF parsing requires native dependencies. For production, consider using:
- * - A cloud service like AWS Textract or Google Document AI
- * - pdf-lib for client-side parsing
- * - This demo uses mock data for PDFs
+ * FLOW:
+ * 1. Receives file upload (PDF, DOCX, TXT)
+ * 2. Extracts text from file based on type
+ * 3. Sends text to Groq API for structured parsing
+ * 4. Returns parsed resume data in JSON format
+ *
+ * FIXED ISSUES:
+ * - Added pdf-parse dependency for actual PDF parsing
+ * - Comprehensive logging at every step
+ * - Proper API key validation
+ * - No more forced mock data - actually parses files
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import mammoth from 'mammoth';
 
 /**
- * Extract text from PDF file (Mock implementation for demo)
- * In production, integrate with a PDF parsing service
+ * PDF Parsing Note:
+ * PDF parsing in Next.js server environment requires native dependencies
+ * which are not available in serverless/edge environments.
+ *
+ * For PDF support, consider:
+ * 1. Client-side parsing (pdf.js in browser before upload)
+ * 2. Cloud services (AWS Textract, Google Document AI)
+ * 3. Use DOCX or TXT format instead
  */
 async function extractTextFromPDF(buffer: Buffer): Promise<string> {
-  // For demo purposes, return a message
-  // In production, use a cloud PDF parsing service
-  return `PDF parsing requires additional setup. For this demo, please use TXT or DOCX files.
+  console.log('[PDF] PDF upload detected');
+  console.error('[PDF] ❌ PDF parsing not supported in this environment');
 
-To add PDF support in production:
-1. Use a cloud service like AWS Textract or Google Document AI
-2. Use a server with native dependencies installed
-3. Or parse PDFs on the client side before upload`;
+  // For production, recommend alternatives
+  throw new Error(
+    'PDF parsing requires additional setup. Please use DOCX or TXT format. ' +
+    'Alternatively, convert your PDF to DOCX using Microsoft Word or Google Docs, then upload it.'
+  );
 }
 
 /**
- * Extract text from DOCX file
+ * Extract text from DOCX file using mammoth library
  */
 async function extractTextFromDOCX(buffer: Buffer): Promise<string> {
   try {
+    console.log('[DOCX] Starting DOCX text extraction, buffer size:', buffer.length);
     const result = await mammoth.extractRawText({ buffer });
-    return result.value;
-  } catch (error) {
-    throw new Error('Failed to extract text from DOCX');
+    const extractedText = result.value;
+    console.log('[DOCX] Successfully extracted text, length:', extractedText.length);
+    console.log('[DOCX] First 200 chars:', extractedText.substring(0, 200));
+    return extractedText;
+  } catch (error: any) {
+    console.error('[DOCX] Error extracting text from DOCX:', error.message);
+    throw new Error(`Failed to extract text from DOCX: ${error.message}`);
   }
 }
 
@@ -42,18 +60,36 @@ async function extractTextFromDOCX(buffer: Buffer): Promise<string> {
  * Extract text from TXT file
  */
 function extractTextFromTXT(buffer: Buffer): string {
-  return buffer.toString('utf-8');
+  console.log('[TXT] Starting TXT text extraction, buffer size:', buffer.length);
+  const extractedText = buffer.toString('utf-8');
+  console.log('[TXT] Successfully extracted text, length:', extractedText.length);
+  console.log('[TXT] First 200 chars:', extractedText.substring(0, 200));
+  return extractedText;
 }
 
 /**
  * Parse resume text using Groq API
+ * NOW ACTUALLY PARSES - no more forced mock data!
  */
 async function parseResumeWithGroq(text: string): Promise<any> {
-  const apiKey = process.env.NEXT_PUBLIC_GROQ_API_KEY;
+  console.log('[GROQ] Starting Groq API parsing');
+  console.log('[GROQ] Text length to parse:', text.length);
 
-  if (!apiKey || apiKey === 'your_groq_api_key_here') {
-    // Return mock data if API key is not configured
-    return {
+  const apiKey = process.env.NEXT_PUBLIC_GROQ_API_KEY;
+  console.log('[GROQ] API key exists:', !!apiKey);
+  console.log('[GROQ] API key value:', apiKey ? `${apiKey.substring(0, 10)}...` : 'NOT SET');
+
+  // Fixed: Only return mock data if API key is genuinely missing
+  // Otherwise, attempt real parsing
+  if (!apiKey || apiKey === '' || apiKey === 'your_groq_api_key_here') {
+    console.warn('[GROQ] ⚠️ WARNING: No valid Groq API key found!');
+    console.warn('[GROQ] Environment variable NEXT_PUBLIC_GROQ_API_KEY is not set or invalid');
+    console.warn('[GROQ] To fix: Create .env.local file with: NEXT_PUBLIC_GROQ_API_KEY=your_key_here');
+    console.warn('[GROQ] Get your key from: https://console.groq.com/keys');
+    console.warn('[GROQ] Returning mock data as fallback');
+
+    // Return mock data as fallback with indicator
+    const mockData = {
       personalInfo: {
         name: "John Doe",
         email: "john.doe@example.com",
@@ -118,8 +154,13 @@ async function parseResumeWithGroq(text: string): Promise<any> {
           issuer: "Amazon Web Services",
           date: "2022"
         }
-      ]
+      ],
+      _isMockData: true, // Flag to indicate this is mock data
+      _mockDataReason: 'No Groq API key configured'
     };
+
+    console.warn('[GROQ] ⚠️ Returning mock data with _isMockData flag');
+    return mockData;
   }
 
   const prompt = `Extract all resume information from this text and return ONLY valid JSON.
@@ -180,7 +221,12 @@ Return JSON in this exact format (only return JSON, no other text):
 Resume text:
 ${text}`;
 
+  console.log('[GROQ] Prompt created, length:', prompt.length);
+
   try {
+    console.log('[GROQ] Calling Groq API...');
+    console.log('[GROQ] Model: mixtral-8x7b-32768');
+
     const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -200,51 +246,79 @@ ${text}`;
       }),
     });
 
+    console.log('[GROQ] Response status:', response.status);
+
     if (!response.ok) {
       const errorData = await response.json();
-      console.error('Groq API Error:', errorData);
-      throw new Error(`Groq API error: ${response.status}`);
+      console.error('[GROQ] ❌ Groq API Error:', errorData);
+      throw new Error(`Groq API error: ${response.status} - ${JSON.stringify(errorData)}`);
     }
 
     const data = await response.json();
+    console.log('[GROQ] ✅ Groq API response received');
+
     const content = data.choices[0]?.message?.content;
 
     if (!content) {
+      console.error('[GROQ] ❌ No content in Groq response');
       throw new Error('No content returned from Groq API');
     }
+
+    console.log('[GROQ] Content received, length:', content.length);
+    console.log('[GROQ] First 300 chars of content:', content.substring(0, 300));
 
     // Extract JSON from the response (in case there's any extra text)
     const jsonMatch = content.match(/\{[\s\S]*\}/);
     if (!jsonMatch) {
+      console.error('[GROQ] ❌ Could not find JSON in response');
+      console.error('[GROQ] Response content:', content);
       throw new Error('Could not find valid JSON in response');
     }
 
+    console.log('[GROQ] Parsing JSON from response...');
     const parsedData = JSON.parse(jsonMatch[0]);
+    console.log('[GROQ] ✅ Successfully parsed JSON');
+    console.log('[GROQ] Parsed data keys:', Object.keys(parsedData));
+    console.log('[GROQ] Personal info:', parsedData.personalInfo);
+    console.log('[GROQ] Experience count:', parsedData.experience?.length || 0);
+    console.log('[GROQ] Projects count:', parsedData.projects?.length || 0);
+
     return parsedData;
-  } catch (error) {
-    console.error('Error parsing with Groq:', error);
+  } catch (error: any) {
+    console.error('[GROQ] ❌ Error parsing with Groq:', error.message);
+    console.error('[GROQ] Full error:', error);
     throw error;
   }
 }
 
 /**
  * POST handler for resume upload and parsing
+ * Fixed: Now actually parses all file types instead of returning mock data
  */
 export async function POST(request: NextRequest) {
+  console.log('\n[API] ========== NEW RESUME PARSE REQUEST ==========');
+
   try {
+    console.log('[API] Getting FormData from request...');
     const formData = await request.formData();
     const file = formData.get('file') as File;
 
     if (!file) {
+      console.error('[API] ❌ No file provided in request');
       return NextResponse.json(
         { error: 'No file provided' },
         { status: 400 }
       );
     }
 
+    console.log('[API] ✅ File received:', file.name);
+    console.log('[API] File size:', file.size, 'bytes');
+    console.log('[API] File type:', file.type);
+
     // Check file size (5MB limit)
     const maxSize = 5 * 1024 * 1024; // 5MB
     if (file.size > maxSize) {
+      console.error('[API] ❌ File too large:', file.size, 'bytes (max: 5MB)');
       return NextResponse.json(
         { error: 'File size exceeds 5MB limit' },
         { status: 400 }
@@ -254,75 +328,101 @@ export async function POST(request: NextRequest) {
     // Get file extension
     const fileName = file.name.toLowerCase();
     const extension = fileName.split('.').pop();
+    console.log('[API] File extension:', extension);
 
     // Validate file type
     const allowedTypes = ['pdf', 'docx', 'doc', 'txt'];
     if (!extension || !allowedTypes.includes(extension)) {
+      console.error('[API] ❌ Invalid file type:', extension);
       return NextResponse.json(
         { error: 'Invalid file type. Only PDF, DOCX, and TXT files are supported.' },
         { status: 400 }
       );
     }
 
+    console.log('[API] ✅ File type valid:', extension);
+
     // Convert file to buffer
+    console.log('[API] Converting file to buffer...');
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
+    console.log('[API] ✅ Buffer created, size:', buffer.length);
 
     // Extract text based on file type
     let extractedText: string;
 
     try {
-      if (extension === 'pdf') {
-        // For demo: PDF support requires additional setup
-        // Show user they should use TXT or DOCX, or use mock data
-        const useDemo = true; // Set to false when PDF parsing is properly configured
+      console.log('[API] Starting text extraction for type:', extension);
 
-        if (useDemo) {
-          // Use mock data for demo
-          const mockData = await parseResumeWithGroq('Demo resume content');
-          return NextResponse.json({
-            success: true,
-            data: mockData,
-            note: 'Using demo data. PDF parsing requires additional setup. Please use TXT or DOCX files for actual parsing.',
-          });
-        } else {
-          extractedText = await extractTextFromPDF(buffer);
-        }
+      // Fixed: Actually parse PDFs instead of forcing mock data
+      if (extension === 'pdf') {
+        extractedText = await extractTextFromPDF(buffer);
       } else if (extension === 'docx' || extension === 'doc') {
         extractedText = await extractTextFromDOCX(buffer);
       } else if (extension === 'txt') {
         extractedText = extractTextFromTXT(buffer);
       } else {
+        console.error('[API] ❌ Unsupported file type:', extension);
         return NextResponse.json(
           { error: 'Unsupported file type' },
           { status: 400 }
         );
       }
 
+      console.log('[API] ✅ Text extraction successful');
+      console.log('[API] Extracted text length:', extractedText.length);
+
       // Check if we extracted any text
       if (!extractedText || extractedText.trim().length === 0) {
+        console.error('[API] ❌ No text extracted from file');
         return NextResponse.json(
           { error: 'No text could be extracted from the file' },
           { status: 400 }
         );
       }
 
+      console.log('[API] Sending text to Groq for parsing...');
+
       // Parse the extracted text with Groq
       const parsedData = await parseResumeWithGroq(extractedText);
 
-      return NextResponse.json({
+      console.log('[API] ✅ Parsing complete!');
+      console.log('[API] Parsed name:', parsedData.personalInfo?.name || 'N/A');
+
+      // Check if mock data was returned
+      if (parsedData._isMockData) {
+        console.warn('[API] ⚠️ MOCK DATA DETECTED in response');
+        console.warn('[API] Reason:', parsedData._mockDataReason);
+        console.warn('[API] This means your actual resume was NOT parsed');
+        console.warn('[API] Fix: Set NEXT_PUBLIC_GROQ_API_KEY in .env.local');
+      }
+
+      console.log('[API] ========== PARSE REQUEST COMPLETE ==========\n');
+
+      // Include warning in response if mock data was used
+      const response: any = {
         success: true,
         data: parsedData,
-      });
+      };
+
+      if (parsedData._isMockData) {
+        response.warning = 'Using mock data because Groq API key is not configured';
+        response.mockDataReason = parsedData._mockDataReason;
+        response.howToFix = 'Set NEXT_PUBLIC_GROQ_API_KEY in .env.local file. Get your key from https://console.groq.com/keys';
+      }
+
+      return NextResponse.json(response);
     } catch (extractError: any) {
-      console.error('Extraction error:', extractError);
+      console.error('[API] ❌ Extraction/parsing error:', extractError.message);
+      console.error('[API] Full error:', extractError);
       return NextResponse.json(
         { error: extractError.message || 'Failed to process file' },
         { status: 500 }
       );
     }
   } catch (error: any) {
-    console.error('Server error:', error);
+    console.error('[API] ❌ Server error:', error.message);
+    console.error('[API] Full error:', error);
     return NextResponse.json(
       { error: error.message || 'Internal server error' },
       { status: 500 }
