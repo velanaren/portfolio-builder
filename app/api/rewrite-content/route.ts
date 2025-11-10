@@ -167,9 +167,10 @@ export async function POST(request: NextRequest) {
     /**
      * Step 2: Call Groq API for content enhancement
      *
-     * MODEL: llama-3.3-70b-versatile
+     * MODEL: Configurable via GROQ_MODEL environment variable
+     * Default: llama-3.1-8b-instant
      * - Fast and accurate for text rewriting tasks
-     * - Handles complex instructions well
+     * - Stable and widely available
      * - Good balance of quality and speed
      *
      * PARAMETERS:
@@ -177,12 +178,14 @@ export async function POST(request: NextRequest) {
      * - max_tokens: 500 (sufficient for resume sections)
      *
      * TO CHANGE MODEL:
-     * Replace 'llama-3.3-70b-versatile' with:
-     * - 'llama-3.1-8b-instant' (faster, smaller model)
-     * - 'llama-3.1-70b-versatile' (alternative large model)
-     * Note: mixtral-8x7b-32768 was decommissioned - use llama models instead
+     * Set GROQ_MODEL in .env.local:
+     * - 'llama-3.1-8b-instant' (fast, recommended, default)
+     * - 'llama-3.1-70b-versatile' (larger, more capable)
+     * - 'gemma-7b-it' (alternative)
      * See: https://console.groq.com/docs/models
      */
+    const model = process.env.GROQ_MODEL || 'llama-3.1-8b-instant';
+
     const chatCompletion = await groq.chat.completions.create({
       messages: [
         {
@@ -190,7 +193,7 @@ export async function POST(request: NextRequest) {
           content: prompt,   // The specialized prompt for this content type
         },
       ],
-      model: 'llama-3.3-70b-versatile',  // AI model to use
+      model: model,  // Use configurable model from environment or default
       temperature: 0.7,    // Controls randomness (0.0 = deterministic, 1.0 = creative)
       max_tokens: 500,     // Maximum length of the response
     });

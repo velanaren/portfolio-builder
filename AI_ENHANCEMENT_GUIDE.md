@@ -106,7 +106,9 @@ const getPromptForType = (type: string, text: string, context?: string): string 
 
 **Step 4c**: Call Groq API
 ```typescript
-// Line 103-120
+// Groq model is configurable via environment variable
+const model = process.env.GROQ_MODEL || 'llama-3.1-8b-instant';
+
 const completion = await groq.chat.completions.create({
   messages: [
     {
@@ -114,7 +116,7 @@ const completion = await groq.chat.completions.create({
       content: prompt,
     },
   ],
-  model: 'llama-3.1-70b-versatile', // Updated from mixtral-8x7b-32768 (decommissioned)
+  model: model, // Uses GROQ_MODEL from .env.local or defaults to llama-3.1-8b-instant
   temperature: 0.7,
   max_tokens: 500,
   top_p: 1,
@@ -123,7 +125,21 @@ const completion = await groq.chat.completions.create({
 const rewrittenText = completion.choices[0]?.message?.content || '';
 ```
 
-**Note**: The `mixtral-8x7b-32768` model was decommissioned by Groq. We now use `llama-3.1-70b-versatile` which provides excellent results. For faster responses, you can use `llama-3.1-8b-instant`.
+**Note**: The Groq model is now configurable! Default is `llama-3.1-8b-instant` (fast, stable, widely available).
+
+**To change the model**, add to your `.env.local`:
+```bash
+# Optional: Override Groq model (default: llama-3.1-8b-instant)
+GROQ_MODEL=llama-3.1-70b-versatile  # For better quality but slower
+# OR
+GROQ_MODEL=gemma-7b-it  # Alternative model
+```
+
+**Available Models**:
+- `llama-3.1-8b-instant` - Fast, stable (default, recommended)
+- `llama-3.1-70b-versatile` - Larger, more capable (slower)
+- `gemma-7b-it` - Alternative instruction-tuned model
+- Check https://console.groq.com/docs/models for latest available models
 
 **Step 4d**: Return Enhanced Content
 ```typescript

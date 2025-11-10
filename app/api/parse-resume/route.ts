@@ -223,11 +223,16 @@ ${text}`;
 
   console.log('[GROQ] Prompt created, length:', prompt.length);
 
+  // Groq model configuration
+  // Default to llama-3.1-8b-instant (stable, fast, widely available)
+  // Can be overridden via NEXT_PUBLIC_GROQ_MODEL environment variable
+  // Current available models (as of 2024): llama-3.1-8b-instant, llama-3.1-70b-versatile, gemma-7b-it
+  // Check https://console.groq.com/docs/models for latest available models
+  const model = process.env.NEXT_PUBLIC_GROQ_MODEL || 'llama-3.1-8b-instant';
+
   try {
     console.log('[GROQ] Calling Groq API...');
-    // Updated: mixtral-8x7b-32768 (decommissioned) → llama-3.1-70b-versatile
-    // Latest Groq model as of 2024 - see https://console.groq.com/docs/models
-    console.log('[GROQ] Model: llama-3.1-70b-versatile');
+    console.log('[GROQ] Model:', model);
 
     const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
@@ -236,7 +241,7 @@ ${text}`;
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'llama-3.1-70b-versatile', // Updated from mixtral-8x7b-32768 (decommissioned)
+        model: model, // Use configurable model from environment or default
         messages: [
           {
             role: 'user',
