@@ -1,14 +1,13 @@
 /**
  * Projects Section
- * Manages multiple project entries with AI enhancement
+ * Manages multiple project entries with AI enhancement (auto-apply)
  */
 
 'use client';
 
 import { useState } from 'react';
-import { Plus, Trash2, Sparkles, Loader2, Copy, ExternalLink } from 'lucide-react';
+import { Plus, Trash2, Sparkles, Loader2, Copy, ExternalLink, Check } from 'lucide-react';
 import { Project } from '@/types';
-import ComparisonModal from '../ComparisonModal';
 
 interface ProjectsSectionProps {
   projects: Project[];
@@ -17,9 +16,7 @@ interface ProjectsSectionProps {
 
 export default function ProjectsSection({ projects, onChange }: ProjectsSectionProps) {
   const [enhancingId, setEnhancingId] = useState<string | null>(null);
-  const [showComparison, setShowComparison] = useState(false);
-  const [currentProjectId, setCurrentProjectId] = useState<string | null>(null);
-  const [rewrittenText, setRewrittenText] = useState('');
+  const [enhanceStatus, setEnhanceStatus] = useState<{[key: string]: 'success' | 'error' | null}>({});
 
   const handleAdd = () => {
     const newProject: Project = {
@@ -64,6 +61,7 @@ export default function ProjectsSection({ projects, onChange }: ProjectsSectionP
     }
 
     setEnhancingId(proj.id);
+    setEnhanceStatus({ ...enhanceStatus, [proj.id]: null });
 
     try {
       const response = await fetch('/api/rewrite-content', {
@@ -79,31 +77,31 @@ export default function ProjectsSection({ projects, onChange }: ProjectsSectionP
       const data = await response.json();
 
       if (data.success) {
-        setRewrittenText(data.rewritten);
-        setCurrentProjectId(proj.id);
-        setShowComparison(true);
+        // Auto-apply: directly update the field
+        handleChange(proj.id, 'description', data.rewritten);
+
+        // Show success feedback
+        setEnhanceStatus({ ...enhanceStatus, [proj.id]: 'success' });
+
+        // Clear success message after 1.5 seconds
+        setTimeout(() => {
+          setEnhanceStatus(prev => ({ ...prev, [proj.id]: null }));
+        }, 1500);
       } else {
-        alert('Failed to enhance description. Please try again.');
+        setEnhanceStatus({ ...enhanceStatus, [proj.id]: 'error' });
+        setTimeout(() => {
+          setEnhanceStatus(prev => ({ ...prev, [proj.id]: null }));
+        }, 2000);
       }
     } catch (error) {
       console.error('Error enhancing description:', error);
-      alert('Failed to enhance description. Please try again.');
+      setEnhanceStatus({ ...enhanceStatus, [proj.id]: 'error' });
+      setTimeout(() => {
+        setEnhanceStatus(prev => ({ ...prev, [proj.id]: null }));
+      }, 2000);
     } finally {
       setEnhancingId(null);
     }
-  };
-
-  const handleAccept = () => {
-    if (currentProjectId) {
-      handleChange(currentProjectId, 'description', rewrittenText);
-    }
-    setShowComparison(false);
-    setCurrentProjectId(null);
-  };
-
-  const handleReject = () => {
-    setShowComparison(false);
-    setCurrentProjectId(null);
   };
 
   return (
@@ -217,14 +215,35 @@ export default function ProjectsSection({ projects, onChange }: ProjectsSectionP
                 <button
                   onClick={() => handleEnhance(proj)}
                   disabled={enhancingId === proj.id}
-                  className="flex items-center space-x-2 px-4 py-2 rounded-lg bg-[#D4A574] text-[#0F1419] text-[13px] font-semibold transition-all duration-300 hover:bg-[#C89850] disabled:opacity-50"
+                  className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-[13px] font-semibold transition-all duration-300 disabled:opacity-50 ${
+                    enhanceStatus[proj.id] === 'success'
+                      ? 'bg-green-500 text-white'
+                      : enhanceStatus[proj.id] === 'error'
+                      ? 'bg-red-500 text-white'
+                      : 'bg-[#D4A574] text-[#0F1419] hover:bg-[#C89850]'
+                  }`}
                 >
                   {enhancingId === proj.id ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <span>Enhancing...</span>
+                    </>
+                  ) : enhanceStatus[proj.id] === 'success' ? (
+                    <>
+                      <Check className="h-4 w-4" />
+                      <span>Enhanced!</span>
+                    </>
+                  ) : enhanceStatus[proj.id] === 'error' ? (
+                    <>
+                      <span>✕</span>
+                      <span>Failed</span>
+                    </>
                   ) : (
-                    <Sparkles className="h-4 w-4" />
+                    <>
+                      <Sparkles className="h-4 w-4" />
+                      <span>Enhance</span>
+                    </>
                   )}
-                  <span>Enhance</span>
                 </button>
 
                 <button
@@ -255,15 +274,6 @@ export default function ProjectsSection({ projects, onChange }: ProjectsSectionP
           <span>Add Project</span>
         </button>
       </section>
-
-      <ComparisonModal
-        isOpen={showComparison}
-        original={projects.find(p => p.id === currentProjectId)?.description || ''}
-        rewritten={rewrittenText}
-        onAccept={handleAccept}
-        onReject={handleReject}
-        onClose={handleReject}
-      />
     </>
   );
 }

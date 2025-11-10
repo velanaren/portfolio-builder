@@ -1,13 +1,12 @@
 /**
  * Professional Summary Section
- * With AI enhancement capability
+ * With AI enhancement capability (auto-apply)
  */
 
 'use client';
 
 import { useState } from 'react';
-import { Sparkles, Loader2 } from 'lucide-react';
-import ComparisonModal from '../ComparisonModal';
+import { Sparkles, Loader2, Check } from 'lucide-react';
 
 interface SummarySectionProps {
   summary: string;
@@ -16,8 +15,7 @@ interface SummarySectionProps {
 
 export default function SummarySection({ summary, onChange }: SummarySectionProps) {
   const [isRewriting, setIsRewriting] = useState(false);
-  const [showComparison, setShowComparison] = useState(false);
-  const [rewrittenText, setRewrittenText] = useState('');
+  const [enhanceStatus, setEnhanceStatus] = useState<'success' | 'error' | null>(null);
   const maxLength = 500;
 
   const handleEnhance = async () => {
@@ -27,6 +25,7 @@ export default function SummarySection({ summary, onChange }: SummarySectionProp
     }
 
     setIsRewriting(true);
+    setEnhanceStatus(null);
 
     try {
       const response = await fetch('/api/rewrite-content', {
@@ -41,26 +40,31 @@ export default function SummarySection({ summary, onChange }: SummarySectionProp
       const data = await response.json();
 
       if (data.success) {
-        setRewrittenText(data.rewritten);
-        setShowComparison(true);
+        // Auto-apply: directly update the field
+        onChange(data.rewritten);
+
+        // Show success feedback
+        setEnhanceStatus('success');
+
+        // Clear success message after 1.5 seconds
+        setTimeout(() => {
+          setEnhanceStatus(null);
+        }, 1500);
       } else {
-        alert('Failed to enhance summary. Please try again.');
+        setEnhanceStatus('error');
+        setTimeout(() => {
+          setEnhanceStatus(null);
+        }, 2000);
       }
     } catch (error) {
       console.error('Error enhancing summary:', error);
-      alert('Failed to enhance summary. Please try again.');
+      setEnhanceStatus('error');
+      setTimeout(() => {
+        setEnhanceStatus(null);
+      }, 2000);
     } finally {
       setIsRewriting(false);
     }
-  };
-
-  const handleAccept = () => {
-    onChange(rewrittenText);
-    setShowComparison(false);
-  };
-
-  const handleReject = () => {
-    setShowComparison(false);
   };
 
   return (
@@ -91,12 +95,28 @@ export default function SummarySection({ summary, onChange }: SummarySectionProp
             <button
               onClick={handleEnhance}
               disabled={isRewriting || !summary}
-              className="flex items-center space-x-2 px-4 py-2 rounded-lg bg-[#D4A574] text-[#0F1419] text-[14px] font-semibold transition-all duration-300 hover:bg-[#C89850] hover:-translate-y-0.5 hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0"
+              className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-[14px] font-semibold transition-all duration-300 disabled:cursor-not-allowed ${
+                enhanceStatus === 'success'
+                  ? 'bg-green-500 text-white'
+                  : enhanceStatus === 'error'
+                  ? 'bg-red-500 text-white'
+                  : 'bg-[#D4A574] text-[#0F1419] hover:bg-[#C89850] hover:-translate-y-0.5 hover:shadow-md disabled:opacity-50 disabled:hover:translate-y-0'
+              }`}
             >
               {isRewriting ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin" />
-                  <span>Rewriting...</span>
+                  <span>Enhancing...</span>
+                </>
+              ) : enhanceStatus === 'success' ? (
+                <>
+                  <Check className="h-4 w-4" />
+                  <span>Enhanced!</span>
+                </>
+              ) : enhanceStatus === 'error' ? (
+                <>
+                  <span>✕</span>
+                  <span>Failed</span>
                 </>
               ) : (
                 <>
@@ -108,15 +128,6 @@ export default function SummarySection({ summary, onChange }: SummarySectionProp
           </div>
         </div>
       </section>
-
-      <ComparisonModal
-        isOpen={showComparison}
-        original={summary}
-        rewritten={rewrittenText}
-        onAccept={handleAccept}
-        onReject={handleReject}
-        onClose={handleReject}
-      />
     </>
   );
 }

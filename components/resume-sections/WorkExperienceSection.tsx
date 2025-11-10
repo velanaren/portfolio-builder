@@ -1,14 +1,13 @@
 /**
  * Work Experience Section
- * Manages multiple work experiences with AI enhancement
+ * Manages multiple work experiences with AI enhancement (auto-apply)
  */
 
 'use client';
 
 import { useState } from 'react';
-import { Plus, Trash2, Sparkles, Loader2, Copy } from 'lucide-react';
+import { Plus, Trash2, Sparkles, Loader2, Copy, Check } from 'lucide-react';
 import { WorkExperience } from '@/types';
-import ComparisonModal from '../ComparisonModal';
 
 interface WorkExperienceSectionProps {
   experiences: WorkExperience[];
@@ -18,9 +17,7 @@ interface WorkExperienceSectionProps {
 export default function WorkExperienceSection({ experiences, onChange }: WorkExperienceSectionProps) {
   const [expandedId, setExpandedId] = useState<string | null>(experiences[0]?.id || null);
   const [enhancingId, setEnhancingId] = useState<string | null>(null);
-  const [showComparison, setShowComparison] = useState(false);
-  const [currentExpId, setCurrentExpId] = useState<string | null>(null);
-  const [rewrittenText, setRewrittenText] = useState('');
+  const [enhanceStatus, setEnhanceStatus] = useState<{[key: string]: 'success' | 'error' | null}>({});
 
   const handleAdd = () => {
     const newExp: WorkExperience = {
@@ -61,6 +58,7 @@ export default function WorkExperienceSection({ experiences, onChange }: WorkExp
     }
 
     setEnhancingId(exp.id);
+    setEnhanceStatus({ ...enhanceStatus, [exp.id]: null });
 
     try {
       const response = await fetch('/api/rewrite-content', {
@@ -76,31 +74,31 @@ export default function WorkExperienceSection({ experiences, onChange }: WorkExp
       const data = await response.json();
 
       if (data.success) {
-        setRewrittenText(data.rewritten);
-        setCurrentExpId(exp.id);
-        setShowComparison(true);
+        // Auto-apply: directly update the field
+        handleChange(exp.id, 'description', data.rewritten);
+
+        // Show success feedback
+        setEnhanceStatus({ ...enhanceStatus, [exp.id]: 'success' });
+
+        // Clear success message after 1.5 seconds
+        setTimeout(() => {
+          setEnhanceStatus(prev => ({ ...prev, [exp.id]: null }));
+        }, 1500);
       } else {
-        alert('Failed to enhance description. Please try again.');
+        setEnhanceStatus({ ...enhanceStatus, [exp.id]: 'error' });
+        setTimeout(() => {
+          setEnhanceStatus(prev => ({ ...prev, [exp.id]: null }));
+        }, 2000);
       }
     } catch (error) {
       console.error('Error enhancing description:', error);
-      alert('Failed to enhance description. Please try again.');
+      setEnhanceStatus({ ...enhanceStatus, [exp.id]: 'error' });
+      setTimeout(() => {
+        setEnhanceStatus(prev => ({ ...prev, [exp.id]: null }));
+      }, 2000);
     } finally {
       setEnhancingId(null);
     }
-  };
-
-  const handleAccept = () => {
-    if (currentExpId) {
-      handleChange(currentExpId, 'description', rewrittenText);
-    }
-    setShowComparison(false);
-    setCurrentExpId(null);
-  };
-
-  const handleReject = () => {
-    setShowComparison(false);
-    setCurrentExpId(null);
   };
 
   return (
@@ -211,14 +209,35 @@ export default function WorkExperienceSection({ experiences, onChange }: WorkExp
                 <button
                   onClick={() => handleEnhance(exp)}
                   disabled={enhancingId === exp.id}
-                  className="flex items-center space-x-2 px-4 py-2 rounded-lg bg-[#D4A574] text-[#0F1419] text-[13px] font-semibold transition-all duration-300 hover:bg-[#C89850] disabled:opacity-50"
+                  className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-[13px] font-semibold transition-all duration-300 disabled:opacity-50 ${
+                    enhanceStatus[exp.id] === 'success'
+                      ? 'bg-green-500 text-white'
+                      : enhanceStatus[exp.id] === 'error'
+                      ? 'bg-red-500 text-white'
+                      : 'bg-[#D4A574] text-[#0F1419] hover:bg-[#C89850]'
+                  }`}
                 >
                   {enhancingId === exp.id ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <span>Enhancing...</span>
+                    </>
+                  ) : enhanceStatus[exp.id] === 'success' ? (
+                    <>
+                      <Check className="h-4 w-4" />
+                      <span>Enhanced!</span>
+                    </>
+                  ) : enhanceStatus[exp.id] === 'error' ? (
+                    <>
+                      <span>✕</span>
+                      <span>Failed</span>
+                    </>
                   ) : (
-                    <Sparkles className="h-4 w-4" />
+                    <>
+                      <Sparkles className="h-4 w-4" />
+                      <span>Enhance</span>
+                    </>
                   )}
-                  <span>Enhance</span>
                 </button>
 
                 <button
@@ -249,15 +268,6 @@ export default function WorkExperienceSection({ experiences, onChange }: WorkExp
           <span>Add Experience</span>
         </button>
       </section>
-
-      <ComparisonModal
-        isOpen={showComparison}
-        original={experiences.find(e => e.id === currentExpId)?.description || ''}
-        rewritten={rewrittenText}
-        onAccept={handleAccept}
-        onReject={handleReject}
-        onClose={handleReject}
-      />
     </>
   );
 }
