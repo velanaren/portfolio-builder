@@ -1,17 +1,24 @@
 /**
- * AI Content Rewrite API Route
+ * AI Content Enhancement API Route
  *
  * PURPOSE:
  * This API endpoint handles AI-powered content enhancement for resume sections.
  * It receives resume content (summary, experience, skills, projects), sends it to
- * the Groq API with specialized prompts, and returns professionally rewritten content.
+ * the Groq API with specialized prompts that ENHANCE (not replace) user content,
+ * and returns professionally improved text that preserves the user's original information.
  *
  * FLOW:
- * 1. Receives POST request with content to enhance
+ * 1. Receives POST request with user's content to enhance
  * 2. Validates API key and request data
- * 3. Selects appropriate prompt based on content type
- * 4. Calls Groq API with the prompt
- * 5. Returns enhanced content to frontend
+ * 3. Selects appropriate enhancement prompt based on content type
+ * 4. Calls Groq API with low temperature (0.3) for consistent, focused enhancement
+ * 5. Returns enhanced content to frontend (auto-applied directly)
+ *
+ * ENHANCEMENT PHILOSOPHY:
+ * - Preserve user's original information, facts, and voice
+ * - Improve clarity, professionalism, and ATS-friendliness
+ * - DO NOT generate new content or fabricate achievements
+ * - Stay true to what the user actually wrote
  *
  * API KEY:
  * Requires GROQ_API_KEY environment variable in .env.local
@@ -38,7 +45,7 @@ const groq = new Groq({
  * Defines the structure of incoming enhancement requests
  */
 interface RewriteRequest {
-  text: string;      // The content to be rewritten (required)
+  text: string;      // The user's original content to be enhanced (required)
   type: 'summary' | 'experience' | 'skill' | 'project'; // Section type (required)
   context?: string;  // Optional additional context (e.g., job title, company name)
 }
@@ -46,46 +53,95 @@ interface RewriteRequest {
 /**
  * Generate specialized prompts for different content types
  *
- * Each content type has a unique prompt tailored to its purpose:
- * - Summary: 2-3 sentences, achievement-oriented, professional
- * - Experience: Action verbs, quantifiable achievements, impact-focused
- * - Skill: Suggests 5-8 complementary skills based on profile
- * - Project: Technical challenges, contributions, measurable impact
+ * IMPORTANT: These prompts are designed to ENHANCE user content, NOT replace it.
+ * The AI should preserve the user's original information, facts, and voice while
+ * improving clarity, professionalism, and ATS-friendliness.
  *
- * @param type - The type of content being rewritten
- * @param text - The original content
+ * Each content type has a unique prompt tailored to its purpose:
+ * - Summary: Enhance clarity and professionalism while keeping user's experience
+ * - Experience: Strengthen action verbs while preserving actual achievements
+ * - Skill: Suggest only 3-5 relevant complementary skills
+ * - Project: Clarify technical details while keeping actual project scope
+ *
+ * @param type - The type of content being enhanced
+ * @param text - The original content from the user
  * @param context - Optional context (job title, company, etc.)
  * @returns Formatted prompt string for the AI
  */
 const getPromptForType = (type: string, text: string, context?: string): string => {
   const prompts = {
-    summary: `You are a professional resume writer. Rewrite the following professional summary to be more impactful, concise, and achievement-oriented. Keep it to 2-3 sentences. Make it compelling and professional.
+    summary: `You are a professional resume editor. The user provided this professional summary:
 
-Original summary: "${text}"
+"${text}"
+
+Your task is to ENHANCE this summary while keeping the core information and user's voice intact.
+Do NOT write new content or add information not present. Instead:
+
+1. Preserve the original meaning and user's actual experience
+2. Improve clarity and professionalism (clarify if vague, refine if unclear)
+3. Add stronger action words (upgrade passive to active voice where appropriate)
+4. Ensure it's ATS-friendly (include relevant keywords, clear structure)
+5. Keep it concise (2-3 sentences, 50-100 words maximum)
+6. DO NOT add achievements, years of experience, or qualifications the user didn't mention
+
 ${context ? `Additional context: ${context}` : ''}
 
-Provide only the rewritten summary, no explanations.`,
+Return ONLY the enhanced summary. No explanations, no suggestions, just the improved text that maintains the user's original information.`,
 
-    experience: `You are a professional resume writer. Rewrite the following job experience description to be more impactful. Use action verbs, quantify achievements where possible, and highlight key accomplishments. Keep it concise and professional.
+    experience: `You are a professional resume editor. The user provided this job description:
 
-Original description: "${text}"
+"${text}"
+
+Your task is to ENHANCE this description while keeping the core facts the user provided.
+Do NOT generate new achievements or add information not present. Instead:
+
+1. Preserve all original facts mentioned by the user
+2. Replace weak verbs with strong action verbs (e.g., "worked on" → "developed")
+3. Clarify vague statements (make them more specific using the information provided)
+4. If the user mentioned results or improvements, quantify them if possible
+5. Make it ATS-friendly (clear format, relevant keywords)
+6. DO NOT add achievements, responsibilities, or metrics the user didn't mention or imply
+7. Keep the user's original experience - don't fabricate new accomplishments
+
 ${context ? `Additional context: ${context}` : ''}
 
-Provide only the rewritten description, no explanations.`,
+Return ONLY the enhanced description. No explanations, no additional content.`,
 
-    skill: `You are a professional resume writer. Based on the following professional summary and current skills, suggest 5-8 additional relevant skills that would complement this profile. Focus on in-demand technical and professional skills.
+    skill: `You are a professional resume editor. The user provided this information:
 
-Summary: "${context}"
-Current skills: "${text}"
+Summary/Context: "${context}"
+Current Skills: "${text}"
 
-Provide only a comma-separated list of suggested skills, no explanations.`,
+Your task is to SUGGEST relevant additional skills that complement their existing profile.
+Important guidelines:
 
-    project: `You are a professional resume writer. Rewrite the following project description to be more impactful and professional. Highlight the technical challenges, your contributions, and the impact. Keep it concise.
+1. Only suggest skills that are clearly related to the user's professional summary and current skills
+2. DO NOT suggest unrelated or generic skills
+3. Suggest only 3-5 skills (not more)
+4. Make sure suggestions are relevant to their specific role and experience level
+5. Include both technical and professional skills if applicable to their profile
 
-Original description: "${text}"
+Return ONLY a comma-separated list of suggested skills. Example: "Python, Data Analysis, Project Management"
+No explanations, no descriptions, just the skill names.`,
+
+    project: `You are a professional resume editor. The user provided this project description:
+
+"${text}"
+
+Your task is to ENHANCE this project description while keeping the user's actual project.
+Do NOT invent new features, technologies, or achievements. Instead:
+
+1. Preserve the actual project name, technologies used, and what was really built
+2. Clarify technical details (if vague, make more specific based on what's provided)
+3. Add impact/results if clearly implied by the user's description
+4. Use stronger, more professional language for technical aspects
+5. Make it clear what the user personally contributed (if mentioned)
+6. DO NOT add features, technologies, or achievements the user didn't mention
+7. Keep factually accurate - stay within the scope of what was described
+
 ${context ? `Additional context: ${context}` : ''}
 
-Provide only the rewritten description, no explanations.`,
+Return ONLY the enhanced description. No explanations, no additional content.`,
   };
 
   // Default to summary prompt if type is unrecognized
@@ -169,12 +225,14 @@ export async function POST(request: NextRequest) {
      *
      * MODEL: Configurable via GROQ_MODEL environment variable
      * Default: llama-3.1-8b-instant
-     * - Fast and accurate for text rewriting tasks
+     * - Fast and accurate for text enhancement tasks
      * - Stable and widely available
      * - Good balance of quality and speed
      *
      * PARAMETERS:
-     * - temperature: 0.7 (balanced creativity vs consistency)
+     * - temperature: 0.3 (low temperature for consistent, focused enhancement)
+     *   Lower temperature (0.3) ensures AI stays close to user's original content
+     *   and doesn't generate creative but inaccurate additions
      * - max_tokens: 500 (sufficient for resume sections)
      *
      * TO CHANGE MODEL:
@@ -194,7 +252,7 @@ export async function POST(request: NextRequest) {
         },
       ],
       model: model,  // Use configurable model from environment or default
-      temperature: 0.7,    // Controls randomness (0.0 = deterministic, 1.0 = creative)
+      temperature: 0.3,    // Low temperature = more consistent, less creative (stays true to user's content)
       max_tokens: 500,     // Maximum length of the response
     });
 
@@ -205,12 +263,12 @@ export async function POST(request: NextRequest) {
     const rewrittenText = chatCompletion.choices[0]?.message?.content?.trim() || text;
 
     /**
-     * Step 4: Return success response with both original and rewritten content
-     * Frontend will display these side-by-side in ComparisonModal
+     * Step 4: Return success response with enhanced content
+     * Frontend will auto-apply the enhanced text directly to the field
      */
     return NextResponse.json({
-      original: text,           // Original content for comparison
-      rewritten: rewrittenText, // AI-enhanced content
+      original: text,           // Original content (kept for reference)
+      rewritten: rewrittenText, // AI-enhanced content (auto-applied)
       success: true,            // Success flag
     });
 
@@ -225,11 +283,11 @@ export async function POST(request: NextRequest) {
      *
      * Returns user-friendly error message while logging details server-side
      */
-    console.error('Error rewriting content:', error);
+    console.error('Error enhancing content:', error);
 
     return NextResponse.json(
       {
-        error: 'Failed to rewrite content',  // User-friendly message
+        error: 'Failed to enhance content',  // User-friendly message
         details: error.message,              // Technical details for debugging
       },
       { status: 500 } // Internal Server Error
