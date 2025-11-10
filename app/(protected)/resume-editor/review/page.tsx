@@ -134,9 +134,7 @@ export default function ResumeReviewPage() {
 
   const handleContinue = () => {
     setResume(editedResume);
-    console.log('Resume data saved:', editedResume);
-    // Will be replaced with actual navigation in Phase 3
-    alert('Resume data saved! Phase 3 editing will be available soon.');
+    router.push('/resume-editor/edit');
   };
 
   return (

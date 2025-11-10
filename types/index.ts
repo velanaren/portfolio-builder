@@ -131,6 +131,8 @@ export interface PersonalInfo {
   phone: string;
   location: string;
   linkedIn?: string;
+  linkedin?: string; // Alias for linkedIn
+  website?: string;
 }
 
 /**
