@@ -86,7 +86,7 @@ Do NOT write new content or add information not present. Instead:
 
 ${context ? `Additional context: ${context}` : ''}
 
-Return ONLY the enhanced summary. No explanations, no suggestions, just the improved text that maintains the user's original information.`,
+Return ONLY the enhanced summary without quotes or quotation marks. Plain text only - do NOT wrap your response in quotes.`,
 
     experience: `You are a professional resume editor. The user provided this job description:
 
@@ -105,7 +105,7 @@ Do NOT generate new achievements or add information not present. Instead:
 
 ${context ? `Additional context: ${context}` : ''}
 
-Return ONLY the enhanced description. No explanations, no additional content.`,
+Return ONLY the enhanced description without quotes or quotation marks. Plain text only - do NOT wrap your response in quotes.`,
 
     skill: `You are a professional resume editor. The user provided this information:
 
@@ -121,8 +121,8 @@ Important guidelines:
 4. Make sure suggestions are relevant to their specific role and experience level
 5. Include both technical and professional skills if applicable to their profile
 
-Return ONLY a comma-separated list of suggested skills. Example: "Python, Data Analysis, Project Management"
-No explanations, no descriptions, just the skill names.`,
+Return ONLY a comma-separated list of suggested skills without quotes. Example: Python, Data Analysis, Project Management
+Plain text only - do NOT wrap your response in quotes. No explanations, just the skill names.`,
 
     project: `You are a professional resume editor. The user provided this project description:
 
@@ -141,7 +141,7 @@ Do NOT invent new features, technologies, or achievements. Instead:
 
 ${context ? `Additional context: ${context}` : ''}
 
-Return ONLY the enhanced description. No explanations, no additional content.`,
+Return ONLY the enhanced description without quotes or quotation marks. Plain text only - do NOT wrap your response in quotes.`,
   };
 
   // Default to summary prompt if type is unrecognized
@@ -259,8 +259,16 @@ export async function POST(request: NextRequest) {
     /**
      * Step 3: Extract the enhanced text from the API response
      * Falls back to original text if API response is empty/invalid
+     *
+     * IMPORTANT: Remove outer quotes if Groq wraps the response in quotes
      */
-    const rewrittenText = chatCompletion.choices[0]?.message?.content?.trim() || text;
+    let rewrittenText = chatCompletion.choices[0]?.message?.content?.trim() || text;
+
+    // Remove outer quotes if they exist (single or double)
+    if ((rewrittenText.startsWith('"') && rewrittenText.endsWith('"')) ||
+        (rewrittenText.startsWith("'") && rewrittenText.endsWith("'"))) {
+      rewrittenText = rewrittenText.slice(1, -1).trim();
+    }
 
     /**
      * Step 4: Return success response with enhanced content
