@@ -10,7 +10,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import { useResume } from '@/contexts/ResumeContext';
 import Navigation from '@/components/Navigation';
-import { Upload, CheckCircle, XCircle, Loader2 } from 'lucide-react';
+import { Upload, CheckCircle, XCircle, Loader2, ChevronLeft } from 'lucide-react';
 
 export default function ResumeUploadPage() {
   const router = useRouter();
@@ -128,6 +128,16 @@ export default function ResumeUploadPage() {
       <Navigation />
 
       <main className="mx-auto max-w-[900px] px-8 lg:px-10 py-16 lg:py-20">
+        {/* Back to Dashboard Button */}
+        <button
+          onClick={() => router.push('/dashboard')}
+          className="flex items-center gap-2 text-[14px] mb-8 transition-colors duration-200 hover:text-[#D4A574]"
+          style={{ color: '#6B7280' }}
+        >
+          <ChevronLeft className="w-4 h-4" />
+          <span>Back to Dashboard</span>
+        </button>
+
         {/* Header */}
         <div
           className={`text-center mb-16 transition-all duration-400 ease-out ${

@@ -7,7 +7,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Download, Eye, Loader2, Check, AlertCircle } from 'lucide-react';
+import { ArrowLeft, Download, Eye, Loader2, Check, AlertCircle, ChevronLeft } from 'lucide-react';
 import { useResume } from '@/contexts/ResumeContext';
 import ExportOptions from '@/components/ResumeExport/ExportOptions';
 import PreviewPanel from '@/components/ResumeExport/PreviewPanel';
@@ -108,6 +108,14 @@ export default function ExportPage() {
       <header className="sticky top-0 z-50 bg-white border-b border-[#E5E7EB] animate-fade-in">
         <div className="max-w-[1400px] mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-4">
+            <button
+              onClick={() => router.push('/dashboard')}
+              className="flex items-center gap-1 text-[14px] text-[#6B7280] hover:text-[#D4A574] transition-colors"
+            >
+              <ChevronLeft className="h-4 w-4" />
+              <span className="hidden sm:inline">Dashboard</span>
+            </button>
+            <div className="h-6 w-px bg-[#E5E7EB]"></div>
             <button
               onClick={() => router.back()}
               className="p-2 hover:bg-[#F8FAFB] rounded-lg transition-colors duration-200"

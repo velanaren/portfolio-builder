@@ -10,7 +10,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import { useResume } from '@/contexts/ResumeContext';
 import { PersonalInfo } from '@/types';
-import { ArrowLeft, Check } from 'lucide-react';
+import { ArrowLeft, Check, ChevronLeft } from 'lucide-react';
 import PersonalInfoSection from '@/components/resume-sections/PersonalInfoSection';
 import SummarySection from '@/components/resume-sections/SummarySection';
 import WorkExperienceSection from '@/components/resume-sections/WorkExperienceSection';
@@ -124,6 +124,14 @@ export default function ResumeEditPage() {
           <div className="flex items-center justify-between h-16">
             {/* Left */}
             <div className="flex items-center gap-4">
+              <button
+                onClick={() => router.push('/dashboard')}
+                className="flex items-center gap-1 text-[14px] text-[#6B7280] hover:text-[#D4A574] transition-colors"
+              >
+                <ChevronLeft className="h-4 w-4" />
+                <span className="hidden sm:inline">Dashboard</span>
+              </button>
+              <div className="h-6 w-px bg-[#E5E7EB]"></div>
               <button
                 onClick={() => router.back()}
                 className="text-[#6B7280] hover:text-[#0F1419] transition-colors"

@@ -10,7 +10,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import { useResume } from '@/contexts/ResumeContext';
 import Navigation from '@/components/Navigation';
-import { ArrowLeft, Plus, Trash2, Edit2, Save, X } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, Edit2, Save, X, ChevronLeft } from 'lucide-react';
 import { ParsedResume, WorkExperience, Education, Project, Certification } from '@/types';
 
 export default function ResumeReviewPage() {
@@ -182,6 +182,16 @@ export default function ResumeReviewPage() {
       <Navigation />
 
       <main className="mx-auto max-w-[1400px] px-8 lg:px-10 py-8">
+        {/* Back to Dashboard Button */}
+        <button
+          onClick={() => router.push('/dashboard')}
+          className="flex items-center gap-2 text-[14px] mb-6 transition-colors duration-200 hover:text-[#D4A574]"
+          style={{ color: '#6B7280' }}
+        >
+          <ChevronLeft className="w-4 h-4" />
+          <span>Back to Dashboard</span>
+        </button>
+
         {/* Header */}
         <div
           className={`mb-12 transition-all duration-400 ease-out ${
