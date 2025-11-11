@@ -25,13 +25,17 @@ export default function ResumeUpload({
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
-  const ACCEPTED_TYPES = ['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
-  const ACCEPTED_EXTENSIONS = ['.pdf', '.docx'];
+  const ACCEPTED_TYPES = [
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'text/plain',
+    'application/pdf'
+  ];
+  const ACCEPTED_EXTENSIONS = ['.docx', '.txt', '.pdf'];
 
   const validateFile = (file: File): string | null => {
     // Check file type
     if (!ACCEPTED_TYPES.includes(file.type) && !ACCEPTED_EXTENSIONS.some(ext => file.name.toLowerCase().endsWith(ext))) {
-      return 'Please upload a PDF or DOCX file';
+      return 'Please upload a DOCX, TXT, or PDF file';
     }
 
     // Check file size
@@ -189,7 +193,7 @@ export default function ResumeUpload({
                 Browse Files
               </button>
               <p className="text-[12px] mt-4" style={{ color: '#9CA3AF' }}>
-                Supported formats: PDF, DOCX • Max size: 5MB
+                Supported formats: DOCX (recommended), TXT, PDF • Max size: 5MB
               </p>
             </>
           )}
@@ -199,7 +203,7 @@ export default function ResumeUpload({
         <input
           ref={fileInputRef}
           type="file"
-          accept=".pdf,.docx"
+          accept=".docx,.txt,.pdf"
           onChange={handleFileInputChange}
           className="hidden"
         />
@@ -236,7 +240,7 @@ export default function ResumeUpload({
           </li>
           <li className="flex items-start">
             <span className="mr-2" style={{ color: '#D4A574' }}>•</span>
-            <span>PDF files generally provide better parsing accuracy</span>
+            <span>DOCX and TXT files provide better parsing accuracy</span>
           </li>
         </ul>
       </div>

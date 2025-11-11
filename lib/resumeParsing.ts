@@ -1,6 +1,7 @@
 /**
  * Resume Parsing Utilities
  * Helper functions for parsing resume files
+ * Reuses the existing /api/parse-resume endpoint from Phase 2
  */
 
 import { ParsedResume } from '@/types';
@@ -14,29 +15,9 @@ export interface ParseResult {
 }
 
 /**
- * Read file as base64 string
- */
-export async function readFileAsBase64(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => {
-      if (typeof reader.result === 'string') {
-        // Remove data URL prefix to get just the base64 content
-        const base64 = reader.result.split(',')[1];
-        resolve(base64);
-      } else {
-        reject(new Error('Failed to read file'));
-      }
-    };
-    reader.onerror = () => reject(reader.error);
-    reader.readAsDataURL(file);
-  });
-}
-
-/**
  * Determine file type from file object
  */
-export function getFileType(file: File): 'pdf' | 'docx' | null {
+export function getFileType(file: File): 'pdf' | 'docx' | 'txt' | null {
   const fileName = file.name.toLowerCase();
 
   if (file.type === 'application/pdf' || fileName.endsWith('.pdf')) {
@@ -50,36 +31,36 @@ export function getFileType(file: File): 'pdf' | 'docx' | null {
     return 'docx';
   }
 
+  if (file.type === 'text/plain' || fileName.endsWith('.txt')) {
+    return 'txt';
+  }
+
   return null;
 }
 
 /**
- * Parse resume file using API
+ * Parse resume file using the existing API from Phase 2
+ * Sends file as FormData to /api/parse-resume
  */
 export async function parseResumeFile(file: File): Promise<ParseResult> {
   try {
-    // Get file type
+    // Validate file type
     const fileType = getFileType(file);
     if (!fileType) {
       return {
         success: false,
-        error: 'Unsupported file type. Please upload a PDF or DOCX file.',
+        error: 'Unsupported file type. Please upload a PDF, DOCX, or TXT file.',
       };
     }
 
-    // Read file as base64
-    const fileContent = await readFileAsBase64(file);
+    // Create FormData and append file (same as Phase 2)
+    const formData = new FormData();
+    formData.append('file', file);
 
-    // Call API
+    // Call existing API endpoint
     const response = await fetch('/api/parse-resume', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        fileContent,
-        fileType,
-      }),
+      body: formData, // Send as FormData, not JSON
     });
 
     const data = await response.json();
@@ -91,14 +72,24 @@ export async function parseResumeFile(file: File): Promise<ParseResult> {
       };
     }
 
+    // The API returns { parsed: ParsedResume } on success
+    const parsedResume = data.parsed;
+
+    if (!parsedResume) {
+      return {
+        success: false,
+        error: 'No resume data returned from parser',
+      };
+    }
+
     // Calculate confidence based on parsed data
-    const confidence = calculateConfidence(data.parsed || data.resumeData);
+    const confidence = calculateConfidence(parsedResume);
 
     return {
       success: true,
-      resumeData: data.parsed || data.resumeData,
+      resumeData: parsedResume,
       confidence,
-      warnings: data.warnings || [],
+      warnings: generateWarnings(parsedResume),
     };
   } catch (error: any) {
     console.error('Error parsing resume:', error);
@@ -107,6 +98,39 @@ export async function parseResumeFile(file: File): Promise<ParseResult> {
       error: error.message || 'Failed to parse resume. Please try again.',
     };
   }
+}
+
+/**
+ * Generate warnings based on parsed resume data
+ */
+function generateWarnings(resumeData: ParsedResume): string[] {
+  const warnings: string[] = [];
+
+  if (!resumeData.summary || resumeData.summary.length < 20) {
+    warnings.push('Professional summary is missing or too short');
+  }
+
+  if (!resumeData.experience || resumeData.experience.length === 0) {
+    warnings.push('No work experience found');
+  }
+
+  if (!resumeData.education || resumeData.education.length === 0) {
+    warnings.push('No education information found');
+  }
+
+  if (!resumeData.skills || resumeData.skills.length === 0) {
+    warnings.push('No skills found');
+  }
+
+  if (!resumeData.personalInfo?.phone) {
+    warnings.push('Phone number not found');
+  }
+
+  if (!resumeData.personalInfo?.location) {
+    warnings.push('Location not found');
+  }
+
+  return warnings;
 }
 
 /**
