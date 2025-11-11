@@ -109,8 +109,7 @@ export default function ResumeEditPage() {
 
   const handleContinue = () => {
     saveResume();
-    // TODO: Navigate to Phase 4 (PDF Export)
-    alert('Continuing to PDF Export (Phase 4 - Coming Soon)');
+    router.push('/resume-editor/export');
   };
 
   return (
