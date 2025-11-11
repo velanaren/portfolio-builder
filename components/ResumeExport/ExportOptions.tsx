@@ -150,7 +150,10 @@ export default function ExportOptions({
           {formatOptions.map((option) => (
             <button
               key={option.id}
-              onClick={() => onFormatChange(option.id)}
+              onClick={() => {
+                console.log('🎯 Format button clicked:', option.id, '(', option.name, ')');
+                onFormatChange(option.id);
+              }}
               className={`w-full text-left p-4 rounded-lg border-2 transition-all duration-200 ${
                 format === option.id
                   ? 'border-[#D4A574] bg-[#FFFBF7] shadow-md'

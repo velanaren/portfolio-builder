@@ -41,6 +41,11 @@ export default function ExportPage() {
     }
   }, [resume, router]);
 
+  // Debug: Log format changes
+  useEffect(() => {
+    console.log('📊 Format state changed to:', format);
+  }, [format]);
+
   const handleDownload = async () => {
     if (!resume) return;
 
@@ -141,7 +146,7 @@ export default function ExportPage() {
             ) : (
               <>
                 <Download className="h-4 w-4" />
-                <span>Download PDF</span>
+                <span>Download {format === 'ats' ? 'ATS' : format === 'modern' ? 'Modern' : 'Classic'} PDF</span>
               </>
             )}
           </button>
