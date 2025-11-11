@@ -13,7 +13,7 @@ import { parseResumeFile } from '@/lib/resumeParsing';
 import { ParsedResume, PortfolioContent, PortfolioCustomization, PortfolioTemplate } from '@/types';
 import { getDefaultCustomization } from '@/lib/portfolio/templates';
 import toast, { Toaster } from 'react-hot-toast';
-import { ChevronLeft, Download, Sparkles } from 'lucide-react';
+import { ChevronLeft, Download, Sparkles, Rocket, ExternalLink, Eye, EyeOff } from 'lucide-react';
 
 // Import components
 import ResumeUpload from '@/components/skills-analysis/ResumeUpload';
@@ -54,6 +54,13 @@ export default function PortfolioBuilderPage() {
 
   // Editor state
   const [activeEditorTab, setActiveEditorTab] = useState<'content' | 'customize'>('content');
+
+  // Vercel deployment state
+  const [vercelApiKey, setVercelApiKey] = useState('');
+  const [showApiKey, setShowApiKey] = useState(false);
+  const [isDeploying, setIsDeploying] = useState(false);
+  const [deploymentUrl, setDeploymentUrl] = useState<string | null>(null);
+  const [deploymentError, setDeploymentError] = useState<string | null>(null);
 
   useEffect(() => {
     requireAuth();
@@ -204,7 +211,7 @@ export default function PortfolioBuilderPage() {
     }, 500);
   };
 
-  // Handle portfolio generation
+  // Handle portfolio generation and deployment
   const handleGenerate = async () => {
     if (!portfolioContent || !customization) {
       toast.error('Portfolio content not ready');
@@ -215,6 +222,7 @@ export default function PortfolioBuilderPage() {
     setGenerationError(null);
 
     try {
+      // Step 1: Generate portfolio code
       const response = await fetch('/api/generate-portfolio-code', {
         method: 'POST',
         headers: {
@@ -234,13 +242,17 @@ export default function PortfolioBuilderPage() {
 
       if (data.success && data.files) {
         setGeneratedFiles(data.files);
-        toast.success('Portfolio generated successfully!', {
-          duration: 3000,
+        toast.success('Portfolio generated! Starting deployment...', {
+          duration: 2000,
           style: {
             background: '#10B981',
             color: '#FFFFFF',
           },
         });
+
+        // Step 2: Automatically deploy to Vercel
+        setIsGenerating(false);
+        await handleDeploy();
       } else {
         throw new Error('Invalid response from server');
       }
@@ -250,33 +262,69 @@ export default function PortfolioBuilderPage() {
       toast.error(errorMessage, {
         duration: 4000,
       });
-    } finally {
       setIsGenerating(false);
     }
   };
 
-  // Handle download
-  const handleDownload = () => {
-    if (generatedFiles.length === 0) return;
+  // Handle deployment to Vercel
+  const handleDeploy = async () => {
+    if (!vercelApiKey.trim()) {
+      toast.error('Please enter your Vercel API key');
+      return;
+    }
 
-    // Create a text file with all code
-    const allFiles = generatedFiles
-      .map((f) => `=== ${f.path} ===\n\n${f.content}\n\n`)
-      .join('\n');
+    if (generatedFiles.length === 0) {
+      toast.error('No files to deploy. Please generate your portfolio first.');
+      return;
+    }
 
-    const blob = new Blob([allFiles], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'portfolio-code.txt';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    setIsDeploying(true);
+    setDeploymentError(null);
+    setDeploymentUrl(null);
 
-    toast.success('Portfolio code downloaded!', {
-      duration: 2000,
-    });
+    try {
+      const response = await fetch('/api/deploy-to-vercel', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          files: generatedFiles,
+          vercelApiKey,
+          projectName: portfolioContent?.personalInfo.name
+            .toLowerCase()
+            .replace(/\s+/g, '-')
+            .replace(/[^a-z0-9-]/g, '') || 'portfolio',
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to deploy to Vercel');
+      }
+
+      if (data.success && data.deploymentUrl) {
+        setDeploymentUrl(data.deploymentUrl);
+        toast.success('Portfolio deployed successfully!', {
+          duration: 5000,
+          style: {
+            background: '#10B981',
+            color: '#FFFFFF',
+          },
+        });
+      } else {
+        throw new Error('Invalid response from deployment service');
+      }
+    } catch (error: any) {
+      const errorMessage = error.message || 'Failed to deploy portfolio. Please try again.';
+      setDeploymentError(errorMessage);
+      toast.error(errorMessage, {
+        duration: 5000,
+      });
+    } finally {
+      setIsDeploying(false);
+    }
   };
 
   if (authLoading) {
@@ -460,13 +508,64 @@ export default function PortfolioBuilderPage() {
                   </div>
                 </div>
 
-                {/* Generate Button */}
-                <div className="mt-6 flex justify-center">
+                {/* Vercel API Key Input & Deploy Button */}
+                <div className="mt-6 max-w-2xl mx-auto">
+                  <div
+                    className="p-6 rounded-xl border mb-4"
+                    style={{ backgroundColor: '#FFFFFF', borderColor: '#E5E7EB' }}
+                  >
+                    <h3 className="text-[16px] font-semibold mb-2" style={{ color: '#1A1F2E' }}>
+                      Vercel Deployment
+                    </h3>
+                    <p className="text-[14px] mb-4" style={{ color: '#6B7280' }}>
+                      Enter your Vercel API token to deploy your portfolio directly to Vercel.{' '}
+                      <a
+                        href="https://vercel.com/account/tokens"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="underline"
+                        style={{ color: '#D4A574' }}
+                      >
+                        Get your API token here
+                      </a>
+                    </p>
+
+                    <div className="mb-4">
+                      <label className="block text-[14px] font-medium mb-2" style={{ color: '#6B7280' }}>
+                        Vercel API Token
+                      </label>
+                      <div className="relative">
+                        <input
+                          type={showApiKey ? 'text' : 'password'}
+                          value={vercelApiKey}
+                          onChange={(e) => setVercelApiKey(e.target.value)}
+                          className="w-full px-4 py-3 pr-12 rounded-lg border text-[14px]"
+                          style={{ borderColor: '#E5E7EB' }}
+                          placeholder="Enter your Vercel API token"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowApiKey(!showApiKey)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                        >
+                          {showApiKey ? (
+                            <EyeOff className="w-5 h-5" />
+                          ) : (
+                            <Eye className="w-5 h-5" />
+                          )}
+                        </button>
+                      </div>
+                      <p className="text-[12px] mt-2" style={{ color: '#6B7280' }}>
+                        Your API token is not stored and is only used for this deployment.
+                      </p>
+                    </div>
+                  </div>
+
                   <button
                     onClick={handleGenerate}
-                    disabled={isGenerating}
-                    className={`px-8 py-4 rounded-xl font-semibold text-[16px] transition-all duration-300 ${
-                      isGenerating ? 'opacity-50 cursor-not-allowed' : 'hover:scale-105'
+                    disabled={isGenerating || !vercelApiKey.trim()}
+                    className={`w-full px-8 py-4 rounded-xl font-semibold text-[16px] transition-all duration-300 ${
+                      isGenerating || !vercelApiKey.trim() ? 'opacity-50 cursor-not-allowed' : 'hover:scale-105'
                     }`}
                     style={{
                       backgroundColor: '#D4A574',
@@ -474,15 +573,15 @@ export default function PortfolioBuilderPage() {
                     }}
                   >
                     {isGenerating ? (
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-center justify-center gap-3">
                         <div className="w-5 h-5 rounded-full border-2 border-white border-t-transparent animate-spin" />
                         <span>Generating Code...</span>
                       </div>
                     ) : (
-                      <>
-                        <Download className="w-5 h-5 inline mr-2" />
-                        Generate & Download Portfolio Code
-                      </>
+                      <div className="flex items-center justify-center gap-2">
+                        <Rocket className="w-5 h-5" />
+                        <span>Generate & Deploy to Vercel</span>
+                      </div>
                     )}
                   </button>
                 </div>
@@ -496,7 +595,28 @@ export default function PortfolioBuilderPage() {
                   </div>
                 )}
               </>
-            ) : (
+            ) : isDeploying ? (
+              <div
+                className="rounded-xl border p-8 max-w-4xl mx-auto text-center"
+                style={{ backgroundColor: '#FFFFFF', borderColor: '#E5E7EB' }}
+              >
+                <div
+                  className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"
+                  style={{ backgroundColor: '#DBEAFE' }}
+                >
+                  <Rocket className="w-8 h-8 animate-bounce" style={{ color: '#2563EB' }} />
+                </div>
+                <h2 className="text-[24px] font-semibold mb-2" style={{ color: '#1A1F2E' }}>
+                  Deploying to Vercel...
+                </h2>
+                <p className="text-[16px] mb-4" style={{ color: '#6B7280' }}>
+                  Your portfolio is being deployed. This may take a minute.
+                </p>
+                <div className="w-12 h-12 rounded-full border-4 border-t-transparent mx-auto animate-spin"
+                  style={{ borderColor: '#D4A574', borderTopColor: 'transparent' }}
+                />
+              </div>
+            ) : deploymentUrl ? (
               <div
                 className="rounded-xl border p-8 max-w-4xl mx-auto"
                 style={{ backgroundColor: '#FFFFFF', borderColor: '#E5E7EB' }}
@@ -506,78 +626,124 @@ export default function PortfolioBuilderPage() {
                     className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"
                     style={{ backgroundColor: '#ECFDF5' }}
                   >
-                    <Download className="w-8 h-8" style={{ color: '#10B981' }} />
+                    <Rocket className="w-8 h-8" style={{ color: '#10B981' }} />
                   </div>
                   <h2 className="text-[24px] font-semibold mb-2" style={{ color: '#1A1F2E' }}>
-                    Portfolio Generated Successfully!
+                    Portfolio Deployed Successfully!
                   </h2>
                   <p className="text-[16px]" style={{ color: '#6B7280' }}>
-                    Your Next.js portfolio code is ready
+                    Your portfolio is now live on Vercel
                   </p>
                 </div>
 
-                <div className="mb-6">
-                  <h3 className="text-[18px] font-semibold mb-3" style={{ color: '#1A1F2E' }}>
-                    Generated Files ({generatedFiles.length})
-                  </h3>
-                  <div className="space-y-2">
-                    {generatedFiles.map((file, index) => (
-                      <div
-                        key={index}
-                        className="p-3 rounded-lg"
-                        style={{ backgroundColor: '#F8FAFB' }}
-                      >
-                        <span className="text-[14px] font-mono" style={{ color: '#1A1F2E' }}>
-                          {file.path}
-                        </span>
-                      </div>
-                    ))}
+                <div
+                  className="mb-6 p-6 rounded-lg border-2"
+                  style={{ backgroundColor: '#F0FDF4', borderColor: '#86EFAC' }}
+                >
+                  <p className="text-[14px] font-semibold mb-3" style={{ color: '#15803D' }}>
+                    🎉 Your Portfolio URL:
+                  </p>
+                  <div className="flex items-center gap-3 mb-4">
+                    <a
+                      href={deploymentUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex-1 px-4 py-3 rounded-lg text-center font-mono text-[14px] break-all"
+                      style={{ backgroundColor: '#FFFFFF', color: '#2563EB' }}
+                    >
+                      {deploymentUrl}
+                    </a>
+                    <button
+                      onClick={() => window.open(deploymentUrl, '_blank')}
+                      className="px-4 py-3 rounded-lg font-semibold transition-all duration-200 hover:scale-105"
+                      style={{ backgroundColor: '#D4A574', color: '#FFFFFF' }}
+                    >
+                      <ExternalLink className="w-5 h-5" />
+                    </button>
                   </div>
-                </div>
-
-                <div className="flex gap-4">
-                  <button
-                    onClick={handleDownload}
-                    className="flex-1 px-6 py-3 rounded-lg font-semibold text-[14px] transition-all duration-200 hover:scale-105"
-                    style={{
-                      backgroundColor: '#D4A574',
-                      color: '#FFFFFF',
-                    }}
-                  >
-                    <Download className="w-4 h-4 inline mr-2" />
-                    Download Code
-                  </button>
-
                   <button
                     onClick={() => {
-                      setGeneratedFiles([]);
-                      setCurrentStep('upload');
-                      handleReupload();
+                      navigator.clipboard.writeText(deploymentUrl);
+                      toast.success('URL copied to clipboard!', { duration: 2000 });
                     }}
-                    className="flex-1 px-6 py-3 rounded-lg font-semibold text-[14px] transition-all duration-200"
-                    style={{
-                      backgroundColor: '#F8FAFB',
-                      color: '#1A1F2E',
-                    }}
+                    className="w-full px-4 py-2 rounded-lg text-[14px] font-medium transition-colors"
+                    style={{ backgroundColor: '#DCFCE7', color: '#15803D' }}
                   >
-                    Create Another Portfolio
+                    Copy URL to Clipboard
                   </button>
                 </div>
+
+                <button
+                  onClick={() => {
+                    setGeneratedFiles([]);
+                    setDeploymentUrl(null);
+                    setVercelApiKey('');
+                    setCurrentStep('upload');
+                    handleReupload();
+                  }}
+                  className="w-full px-6 py-3 rounded-lg font-semibold text-[14px] transition-all duration-200"
+                  style={{
+                    backgroundColor: '#F8FAFB',
+                    color: '#1A1F2E',
+                  }}
+                >
+                  Create Another Portfolio
+                </button>
 
                 <div className="mt-6 p-4 rounded-lg" style={{ backgroundColor: '#FEF3C7' }}>
                   <p className="text-[12px] font-semibold mb-1" style={{ color: '#92400E' }}>
-                    📝 Next Steps:
+                    ✨ What's Next:
                   </p>
                   <ul className="text-[12px] space-y-1" style={{ color: '#92400E' }}>
-                    <li>1. Download the generated code</li>
-                    <li>2. Create a new folder and extract the files</li>
-                    <li>3. Run `npm install` to install dependencies</li>
-                    <li>4. Run `npm run dev` to start the development server</li>
-                    <li>5. Deploy to Vercel with `vercel` command</li>
+                    <li>• Your portfolio is live and accessible worldwide</li>
+                    <li>• You can manage it from your Vercel dashboard</li>
+                    <li>• Make changes and redeploy anytime</li>
+                    <li>• Connect a custom domain in Vercel settings</li>
                   </ul>
                 </div>
               </div>
-            )}
+            ) : deploymentError ? (
+              <div
+                className="rounded-xl border p-8 max-w-4xl mx-auto"
+                style={{ backgroundColor: '#FFFFFF', borderColor: '#E5E7EB' }}
+              >
+                <div className="text-center mb-6">
+                  <div
+                    className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"
+                    style={{ backgroundColor: '#FEF2F2' }}
+                  >
+                    <ExternalLink className="w-8 h-8" style={{ color: '#DC2626' }} />
+                  </div>
+                  <h2 className="text-[24px] font-semibold mb-2" style={{ color: '#1A1F2E' }}>
+                    Deployment Failed
+                  </h2>
+                  <p className="text-[16px]" style={{ color: '#6B7280' }}>
+                    There was an error deploying your portfolio
+                  </p>
+                </div>
+
+                <div className="mb-6 p-4 rounded-lg" style={{ backgroundColor: '#FEF2F2' }}>
+                  <p className="text-[14px]" style={{ color: '#991B1B' }}>
+                    {deploymentError}
+                  </p>
+                </div>
+
+                <button
+                  onClick={() => {
+                    setDeploymentError(null);
+                    handleDeploy();
+                  }}
+                  disabled={isDeploying}
+                  className="w-full px-6 py-3 rounded-lg font-semibold text-[14px] transition-all duration-200"
+                  style={{
+                    backgroundColor: '#D4A574',
+                    color: '#FFFFFF',
+                  }}
+                >
+                  Try Again
+                </button>
+              </div>
+            ) : null}
           </div>
         )}
       </main>
