@@ -11,6 +11,11 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { resume, format, theme, filename } = body;
 
+    // Debug logging
+    console.log('🚀 API received format:', format);
+    console.log('🎨 API received theme:', theme);
+    console.log('📄 API received filename:', filename);
+
     if (!resume || !format) {
       return NextResponse.json(
         { error: 'Missing required fields: resume and format' },
@@ -19,6 +24,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Generate PDF
+    console.log('📝 Calling generatePDF with format:', format);
     const pdf = generatePDF({
       resume,
       format,

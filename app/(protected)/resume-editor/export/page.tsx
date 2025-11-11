@@ -47,6 +47,11 @@ export default function ExportPage() {
     setIsDownloading(true);
     setDownloadStatus('idle');
 
+    // Debug logging
+    console.log('🔍 Download initiated with format:', format);
+    console.log('🎨 Theme:', theme);
+    console.log('📄 Filename:', filename);
+
     try {
       const response = await fetch('/api/generate-pdf', {
         method: 'POST',

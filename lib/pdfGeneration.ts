@@ -16,15 +16,25 @@ interface GeneratePDFOptions {
 }
 
 export function generatePDF({ resume, format, theme }: GeneratePDFOptions): jsPDF {
+  // Debug logging
+  console.log('📋 generatePDF called with:');
+  console.log('  - Format:', format, '(type:', typeof format, ')');
+  console.log('  - Theme:', theme);
+  console.log('  - Resume name:', resume.personalInfo?.name);
+
   // Route to appropriate template based on format
   switch (format) {
     case 'ats':
+      console.log('✅ Routing to ATS template');
       return generateATSTemplate(resume);
     case 'modern':
+      console.log('✅ Routing to Modern template');
       return generateModernTemplate(resume, theme);
     case 'classic':
+      console.log('✅ Routing to Classic template');
       return generateClassicTemplate(resume, theme);
     default:
+      console.log('⚠️ Unknown format, defaulting to ATS template');
       return generateATSTemplate(resume);
   }
 }
