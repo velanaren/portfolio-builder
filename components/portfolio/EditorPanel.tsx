@@ -19,13 +19,14 @@ export default function EditorPanel({ content, onContentChange }: EditorPanelPro
   const [enhancingSection, setEnhancingSection] = useState<string | null>(null);
 
   // AI Enhancement Handler
-  const handleAIEnhance = async (section: string, text: string, context?: string) => {
+  const handleAIEnhance = async (section: string, text: string, context?: string, itemIndex?: number) => {
     if (!text.trim()) {
       toast.error('Please enter some content first');
       return;
     }
 
-    setEnhancingSection(section);
+    const enhanceKey = itemIndex !== undefined ? `${section}-${itemIndex}` : section;
+    setEnhancingSection(enhanceKey);
 
     try {
       const response = await fetch('/api/rewrite-content', {
@@ -33,7 +34,7 @@ export default function EditorPanel({ content, onContentChange }: EditorPanelPro
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           text,
-          type: section === 'about' ? 'summary' : section,
+          type: section === 'about' ? 'summary' : section === 'project' ? 'project' : 'experience',
           context,
         }),
       });
@@ -46,6 +47,10 @@ export default function EditorPanel({ content, onContentChange }: EditorPanelPro
 
         if (section === 'about') {
           updatedContent.sections.about.content = data.rewritten;
+        } else if (section === 'project' && itemIndex !== undefined) {
+          updatedContent.sections.projects.items[itemIndex].description = data.rewritten;
+        } else if (section === 'experience' && itemIndex !== undefined) {
+          updatedContent.sections.experience.items[itemIndex].description = data.rewritten;
         }
 
         onContentChange(updatedContent);
@@ -134,6 +139,159 @@ export default function EditorPanel({ content, onContentChange }: EditorPanelPro
         projects: {
           ...content.sections.projects,
           items: content.sections.projects.items.filter((_, i) => i !== index),
+        },
+      },
+    });
+  };
+
+  // Experience handlers
+  const addExperience = () => {
+    onContentChange({
+      ...content,
+      sections: {
+        ...content.sections,
+        experience: {
+          ...content.sections.experience,
+          items: [
+            ...content.sections.experience.items,
+            {
+              id: Date.now().toString(),
+              position: '',
+              company: '',
+              duration: '',
+              description: '',
+            },
+          ],
+        },
+      },
+    });
+  };
+
+  const updateExperience = (index: number, field: string, value: string) => {
+    const updatedExperience = [...content.sections.experience.items];
+    updatedExperience[index] = {
+      ...updatedExperience[index],
+      [field]: value,
+    };
+
+    onContentChange({
+      ...content,
+      sections: {
+        ...content.sections,
+        experience: {
+          ...content.sections.experience,
+          items: updatedExperience,
+        },
+      },
+    });
+  };
+
+  const removeExperience = (index: number) => {
+    onContentChange({
+      ...content,
+      sections: {
+        ...content.sections,
+        experience: {
+          ...content.sections.experience,
+          items: content.sections.experience.items.filter((_, i) => i !== index),
+        },
+      },
+    });
+  };
+
+  // Education handlers
+  const addEducation = () => {
+    onContentChange({
+      ...content,
+      sections: {
+        ...content.sections,
+        education: {
+          ...content.sections.education,
+          items: [
+            ...content.sections.education.items,
+            {
+              id: Date.now().toString(),
+              degree: '',
+              field: '',
+              school: '',
+              year: '',
+            },
+          ],
+        },
+      },
+    });
+  };
+
+  const updateEducation = (index: number, field: string, value: string) => {
+    const updatedEducation = [...content.sections.education.items];
+    updatedEducation[index] = {
+      ...updatedEducation[index],
+      [field]: value,
+    };
+
+    onContentChange({
+      ...content,
+      sections: {
+        ...content.sections,
+        education: {
+          ...content.sections.education,
+          items: updatedEducation,
+        },
+      },
+    });
+  };
+
+  const removeEducation = (index: number) => {
+    onContentChange({
+      ...content,
+      sections: {
+        ...content.sections,
+        education: {
+          ...content.sections.education,
+          items: content.sections.education.items.filter((_, i) => i !== index),
+        },
+      },
+    });
+  };
+
+  // Skills handlers
+  const addSkill = () => {
+    onContentChange({
+      ...content,
+      sections: {
+        ...content.sections,
+        skills: {
+          ...content.sections.skills,
+          items: [...content.sections.skills.items, ''],
+        },
+      },
+    });
+  };
+
+  const updateSkill = (index: number, value: string) => {
+    const updatedSkills = [...content.sections.skills.items];
+    updatedSkills[index] = value;
+
+    onContentChange({
+      ...content,
+      sections: {
+        ...content.sections,
+        skills: {
+          ...content.sections.skills,
+          items: updatedSkills,
+        },
+      },
+    });
+  };
+
+  const removeSkill = (index: number) => {
+    onContentChange({
+      ...content,
+      sections: {
+        ...content.sections,
+        skills: {
+          ...content.sections.skills,
+          items: content.sections.skills.items.filter((_, i) => i !== index),
         },
       },
     });
@@ -300,13 +458,44 @@ export default function EditorPanel({ content, onContentChange }: EditorPanelPro
                   placeholder="Project Name"
                 />
 
-                <textarea
-                  value={project.description}
-                  onChange={(e) => updateProject(index, 'description', e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg border text-[14px] min-h-[80px]"
-                  style={{ borderColor: '#E5E7EB' }}
-                  placeholder="Project Description"
-                />
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="text-[12px] font-medium" style={{ color: '#6B7280' }}>
+                      Description
+                    </label>
+                    <button
+                      onClick={() =>
+                        handleAIEnhance('project', project.description, project.name, index)
+                      }
+                      disabled={enhancingSection === `project-${index}`}
+                      className="flex items-center gap-1 px-2 py-1 rounded text-[11px] font-medium transition-all duration-200"
+                      style={{
+                        backgroundColor:
+                          enhancingSection === `project-${index}` ? '#E5E7EB' : '#D4A574',
+                        color: '#FFFFFF',
+                      }}
+                    >
+                      {enhancingSection === `project-${index}` ? (
+                        <>
+                          <div className="w-2.5 h-2.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                          Enhancing...
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="w-2.5 h-2.5" />
+                          AI Enhance
+                        </>
+                      )}
+                    </button>
+                  </div>
+                  <textarea
+                    value={project.description}
+                    onChange={(e) => updateProject(index, 'description', e.target.value)}
+                    className="w-full px-3 py-2 rounded-lg border text-[14px] min-h-[80px]"
+                    style={{ borderColor: '#E5E7EB' }}
+                    placeholder="Project Description"
+                  />
+                </div>
 
                 <input
                   type="text"
@@ -332,6 +521,233 @@ export default function EditorPanel({ content, onContentChange }: EditorPanelPro
                   placeholder="Project URL (optional)"
                 />
               </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Experience Section */}
+      <div>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-[18px] font-semibold" style={{ color: '#1A1F2E' }}>
+            Work Experience
+          </h3>
+          <button
+            onClick={addExperience}
+            className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-[12px] font-medium"
+            style={{ backgroundColor: '#D4A574', color: '#FFFFFF' }}
+          >
+            <Plus className="w-3 h-3" />
+            Add Experience
+          </button>
+        </div>
+
+        <div className="space-y-4">
+          {content.sections.experience.items.map((exp, index) => (
+            <div
+              key={exp.id}
+              className="p-4 rounded-lg border"
+              style={{ borderColor: '#E5E7EB', backgroundColor: '#F8FAFB' }}
+            >
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-[12px] font-medium" style={{ color: '#6B7280' }}>
+                  Experience {index + 1}
+                </span>
+                <button
+                  onClick={() => removeExperience(index)}
+                  className="text-red-500 hover:text-red-700"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
+
+              <div className="space-y-3">
+                <input
+                  type="text"
+                  value={exp.position}
+                  onChange={(e) => updateExperience(index, 'position', e.target.value)}
+                  className="w-full px-3 py-2 rounded-lg border text-[14px]"
+                  style={{ borderColor: '#E5E7EB' }}
+                  placeholder="Position/Job Title"
+                />
+
+                <input
+                  type="text"
+                  value={exp.company}
+                  onChange={(e) => updateExperience(index, 'company', e.target.value)}
+                  className="w-full px-3 py-2 rounded-lg border text-[14px]"
+                  style={{ borderColor: '#E5E7EB' }}
+                  placeholder="Company Name"
+                />
+
+                <input
+                  type="text"
+                  value={exp.duration}
+                  onChange={(e) => updateExperience(index, 'duration', e.target.value)}
+                  className="w-full px-3 py-2 rounded-lg border text-[14px]"
+                  style={{ borderColor: '#E5E7EB' }}
+                  placeholder="Duration (e.g., Jan 2020 - Present)"
+                />
+
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="text-[12px] font-medium" style={{ color: '#6B7280' }}>
+                      Description
+                    </label>
+                    <button
+                      onClick={() =>
+                        handleAIEnhance(
+                          'experience',
+                          exp.description,
+                          `${exp.position} at ${exp.company}`,
+                          index
+                        )
+                      }
+                      disabled={enhancingSection === `experience-${index}`}
+                      className="flex items-center gap-1 px-2 py-1 rounded text-[11px] font-medium transition-all duration-200"
+                      style={{
+                        backgroundColor:
+                          enhancingSection === `experience-${index}` ? '#E5E7EB' : '#D4A574',
+                        color: '#FFFFFF',
+                      }}
+                    >
+                      {enhancingSection === `experience-${index}` ? (
+                        <>
+                          <div className="w-2.5 h-2.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                          Enhancing...
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="w-2.5 h-2.5" />
+                          AI Enhance
+                        </>
+                      )}
+                    </button>
+                  </div>
+                  <textarea
+                    value={exp.description}
+                    onChange={(e) => updateExperience(index, 'description', e.target.value)}
+                    className="w-full px-3 py-2 rounded-lg border text-[14px] min-h-[80px]"
+                    style={{ borderColor: '#E5E7EB' }}
+                    placeholder="Describe your responsibilities and achievements..."
+                  />
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Education Section */}
+      <div>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-[18px] font-semibold" style={{ color: '#1A1F2E' }}>
+            Education
+          </h3>
+          <button
+            onClick={addEducation}
+            className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-[12px] font-medium"
+            style={{ backgroundColor: '#D4A574', color: '#FFFFFF' }}
+          >
+            <Plus className="w-3 h-3" />
+            Add Education
+          </button>
+        </div>
+
+        <div className="space-y-4">
+          {content.sections.education.items.map((edu, index) => (
+            <div
+              key={edu.id}
+              className="p-4 rounded-lg border"
+              style={{ borderColor: '#E5E7EB', backgroundColor: '#F8FAFB' }}
+            >
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-[12px] font-medium" style={{ color: '#6B7280' }}>
+                  Education {index + 1}
+                </span>
+                <button
+                  onClick={() => removeEducation(index)}
+                  className="text-red-500 hover:text-red-700"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
+
+              <div className="space-y-3">
+                <input
+                  type="text"
+                  value={edu.degree}
+                  onChange={(e) => updateEducation(index, 'degree', e.target.value)}
+                  className="w-full px-3 py-2 rounded-lg border text-[14px]"
+                  style={{ borderColor: '#E5E7EB' }}
+                  placeholder="Degree (e.g., Bachelor of Science)"
+                />
+
+                <input
+                  type="text"
+                  value={edu.field}
+                  onChange={(e) => updateEducation(index, 'field', e.target.value)}
+                  className="w-full px-3 py-2 rounded-lg border text-[14px]"
+                  style={{ borderColor: '#E5E7EB' }}
+                  placeholder="Field of Study (e.g., Computer Science)"
+                />
+
+                <input
+                  type="text"
+                  value={edu.school}
+                  onChange={(e) => updateEducation(index, 'school', e.target.value)}
+                  className="w-full px-3 py-2 rounded-lg border text-[14px]"
+                  style={{ borderColor: '#E5E7EB' }}
+                  placeholder="School/University Name"
+                />
+
+                <input
+                  type="text"
+                  value={edu.year || ''}
+                  onChange={(e) => updateEducation(index, 'year', e.target.value)}
+                  className="w-full px-3 py-2 rounded-lg border text-[14px]"
+                  style={{ borderColor: '#E5E7EB' }}
+                  placeholder="Year (e.g., 2020 or 2016-2020)"
+                />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Skills Section */}
+      <div>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-[18px] font-semibold" style={{ color: '#1A1F2E' }}>
+            Skills
+          </h3>
+          <button
+            onClick={addSkill}
+            className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-[12px] font-medium"
+            style={{ backgroundColor: '#D4A574', color: '#FFFFFF' }}
+          >
+            <Plus className="w-3 h-3" />
+            Add Skill
+          </button>
+        </div>
+
+        <div className="space-y-2">
+          {content.sections.skills.items.map((skill, index) => (
+            <div key={index} className="flex items-center gap-2">
+              <input
+                type="text"
+                value={skill}
+                onChange={(e) => updateSkill(index, e.target.value)}
+                className="flex-1 px-3 py-2 rounded-lg border text-[14px]"
+                style={{ borderColor: '#E5E7EB' }}
+                placeholder="Enter a skill (e.g., React, Python, AWS)"
+              />
+              <button
+                onClick={() => removeSkill(index)}
+                className="text-red-500 hover:text-red-700 p-2"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
             </div>
           ))}
         </div>
