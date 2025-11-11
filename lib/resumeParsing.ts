@@ -72,8 +72,8 @@ export async function parseResumeFile(file: File): Promise<ParseResult> {
       };
     }
 
-    // The API returns { parsed: ParsedResume } on success
-    const parsedResume = data.parsed;
+    // The API returns { success: true, data: ParsedResume } on success
+    const parsedResume = data.data;
 
     if (!parsedResume) {
       return {
