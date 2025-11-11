@@ -19,6 +19,9 @@ import { ChevronLeft, Download, Sparkles } from 'lucide-react';
 import ResumeUpload from '@/components/skills-analysis/ResumeUpload';
 import ResumeReview from '@/components/skills-analysis/ResumeReview';
 import TemplateSelector from '@/components/portfolio/TemplateSelector';
+import EditorPanel from '@/components/portfolio/EditorPanel';
+import LivePreview from '@/components/portfolio/LivePreview';
+import CustomizationPanel from '@/components/portfolio/CustomizationPanel';
 
 type Step = 'upload' | 'review' | 'template' | 'generate';
 
@@ -48,6 +51,9 @@ export default function PortfolioBuilderPage() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [generationError, setGenerationError] = useState<string | null>(null);
   const [generatedFiles, setGeneratedFiles] = useState<Array<{ path: string; content: string }>>([]);
+
+  // Editor state
+  const [activeEditorTab, setActiveEditorTab] = useState<'content' | 'customize'>('content');
 
   useEffect(() => {
     requireAuth();
@@ -379,53 +385,120 @@ export default function PortfolioBuilderPage() {
           />
         )}
 
-        {currentStep === 'generate' && (
-          <div className="max-w-4xl mx-auto">
+        {currentStep === 'generate' && portfolioContent && customization && (
+          <div className="w-full">
             {generatedFiles.length === 0 ? (
-              <div
-                className="rounded-xl border p-8 text-center"
-                style={{ backgroundColor: '#FFFFFF', borderColor: '#E5E7EB' }}
-              >
-                <h2 className="text-[24px] font-semibold mb-4" style={{ color: '#1A1F2E' }}>
-                  Ready to Generate Your Portfolio
-                </h2>
-                <p className="text-[16px] mb-6" style={{ color: '#6B7280' }}>
-                  Click the button below to generate your Next.js portfolio website code
-                </p>
-
-                <button
-                  onClick={handleGenerate}
-                  disabled={isGenerating}
-                  className={`px-8 py-4 rounded-xl font-semibold text-[16px] transition-all duration-300 ${
-                    isGenerating ? 'opacity-50 cursor-not-allowed' : 'hover:scale-105'
-                  }`}
-                  style={{
-                    backgroundColor: '#D4A574',
-                    color: '#FFFFFF',
-                  }}
-                >
-                  {isGenerating ? (
-                    <div className="flex items-center gap-3">
-                      <div className="w-5 h-5 rounded-full border-2 border-white border-t-transparent animate-spin" />
-                      <span>Generating...</span>
+              <>
+                {/* Split-Screen Editor */}
+                <div className="flex gap-4 h-[calc(100vh-350px)] min-h-[600px]">
+                  {/* Left Panel - Editor and Customization (40%) */}
+                  <div className="w-[40%] flex flex-col">
+                    {/* Tabs */}
+                    <div
+                      className="flex border-b"
+                      style={{ borderColor: '#E5E7EB', backgroundColor: '#FFFFFF' }}
+                    >
+                      <button
+                        onClick={() => setActiveEditorTab('content')}
+                        className={`flex-1 px-6 py-3 text-[14px] font-semibold transition-colors duration-200 ${
+                          activeEditorTab === 'content'
+                            ? 'border-b-2'
+                            : ''
+                        }`}
+                        style={{
+                          color: activeEditorTab === 'content' ? '#D4A574' : '#6B7280',
+                          borderColor: activeEditorTab === 'content' ? '#D4A574' : 'transparent',
+                        }}
+                      >
+                        Content
+                      </button>
+                      <button
+                        onClick={() => setActiveEditorTab('customize')}
+                        className={`flex-1 px-6 py-3 text-[14px] font-semibold transition-colors duration-200 ${
+                          activeEditorTab === 'customize'
+                            ? 'border-b-2'
+                            : ''
+                        }`}
+                        style={{
+                          color: activeEditorTab === 'customize' ? '#D4A574' : '#6B7280',
+                          borderColor: activeEditorTab === 'customize' ? '#D4A574' : 'transparent',
+                        }}
+                      >
+                        Customize
+                      </button>
                     </div>
-                  ) : (
-                    'Generate Portfolio Code'
-                  )}
-                </button>
+
+                    {/* Tab Content */}
+                    <div
+                      className="flex-1 overflow-hidden rounded-b-xl border border-t-0"
+                      style={{ backgroundColor: '#FFFFFF', borderColor: '#E5E7EB' }}
+                    >
+                      {activeEditorTab === 'content' && (
+                        <EditorPanel
+                          content={portfolioContent}
+                          onContentChange={setPortfolioContent}
+                        />
+                      )}
+
+                      {activeEditorTab === 'customize' && (
+                        <CustomizationPanel
+                          customization={customization}
+                          onCustomizationChange={setCustomization}
+                        />
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Right Panel - Live Preview (60%) */}
+                  <div className="w-[60%]">
+                    <div
+                      className="h-full rounded-xl border overflow-hidden"
+                      style={{ backgroundColor: '#FFFFFF', borderColor: '#E5E7EB' }}
+                    >
+                      <LivePreview content={portfolioContent} customization={customization} />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Generate Button */}
+                <div className="mt-6 flex justify-center">
+                  <button
+                    onClick={handleGenerate}
+                    disabled={isGenerating}
+                    className={`px-8 py-4 rounded-xl font-semibold text-[16px] transition-all duration-300 ${
+                      isGenerating ? 'opacity-50 cursor-not-allowed' : 'hover:scale-105'
+                    }`}
+                    style={{
+                      backgroundColor: '#D4A574',
+                      color: '#FFFFFF',
+                    }}
+                  >
+                    {isGenerating ? (
+                      <div className="flex items-center gap-3">
+                        <div className="w-5 h-5 rounded-full border-2 border-white border-t-transparent animate-spin" />
+                        <span>Generating Code...</span>
+                      </div>
+                    ) : (
+                      <>
+                        <Download className="w-5 h-5 inline mr-2" />
+                        Generate & Download Portfolio Code
+                      </>
+                    )}
+                  </button>
+                </div>
 
                 {generationError && (
                   <div
-                    className="mt-6 p-4 rounded-lg"
+                    className="mt-4 p-4 rounded-lg max-w-2xl mx-auto"
                     style={{ backgroundColor: '#FEF2F2', color: '#991B1B' }}
                   >
                     {generationError}
                   </div>
                 )}
-              </div>
+              </>
             ) : (
               <div
-                className="rounded-xl border p-8"
+                className="rounded-xl border p-8 max-w-4xl mx-auto"
                 style={{ backgroundColor: '#FFFFFF', borderColor: '#E5E7EB' }}
               >
                 <div className="text-center mb-8">
