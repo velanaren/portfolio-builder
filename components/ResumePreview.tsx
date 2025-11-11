@@ -12,7 +12,7 @@
 
 import { useState } from 'react';
 import { ParsedResume } from '@/types';
-import { Download, Maximize2, Printer, Briefcase, GraduationCap, FolderOpen, Award } from 'lucide-react';
+import { Briefcase, GraduationCap, FolderOpen, Award } from 'lucide-react';
 
 interface ResumePreviewProps {
   resume: ParsedResume;
@@ -72,22 +72,6 @@ export default function ResumePreview({ resume }: ResumePreviewProps) {
           {theme === 'classic' && <ClassicTheme resume={resume} />}
           {theme === 'modern' && <ModernTheme resume={resume} />}
           {theme === 'minimal' && <MinimalTheme resume={resume} />}
-        </div>
-
-        {/* Preview Controls */}
-        <div className="flex gap-2 mt-4">
-          <button className="flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-white border border-[#E5E7EB] text-[#0F1419] text-[13px] font-semibold transition-all duration-300 hover:bg-[#F8FAFB]">
-            <Download className="h-4 w-4" />
-            <span>Download</span>
-          </button>
-          <button className="flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-white border border-[#E5E7EB] text-[#0F1419] text-[13px] font-semibold transition-all duration-300 hover:bg-[#F8FAFB]">
-            <Maximize2 className="h-4 w-4" />
-            <span>Full Screen</span>
-          </button>
-          <button className="flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-white border border-[#E5E7EB] text-[#0F1419] text-[13px] font-semibold transition-all duration-300 hover:bg-[#F8FAFB]">
-            <Printer className="h-4 w-4" />
-            <span>Print</span>
-          </button>
         </div>
       </div>
     </div>
