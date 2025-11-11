@@ -23,16 +23,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Format files for Vercel API
-    const vercelFiles: Record<string, { file: string }> = {};
+    console.log('Deploying to Vercel with', files.length, 'files');
 
-    files.forEach((file: { path: string; content: string }) => {
-      vercelFiles[file.path] = {
-        file: Buffer.from(file.content).toString('base64'),
-      };
-    });
+    // Format files for Vercel API - correct format
+    const vercelFiles: Array<{ file: string; data: string }> = files.map(
+      (file: { path: string; content: string }) => ({
+        file: file.path,
+        data: file.content,
+      })
+    );
 
-    // Create deployment payload
+    // Create deployment payload with correct Vercel API format
     const deploymentPayload = {
       name: projectName || 'portfolio',
       files: vercelFiles,
@@ -42,8 +43,9 @@ export async function POST(request: NextRequest) {
         outputDirectory: '.next',
         installCommand: 'npm install',
       },
-      target: 'production',
     };
+
+    console.log('Sending deployment to Vercel API...');
 
     // Deploy to Vercel
     const vercelResponse = await fetch('https://api.vercel.com/v13/deployments', {
@@ -57,12 +59,19 @@ export async function POST(request: NextRequest) {
 
     const vercelData = await vercelResponse.json();
 
+    console.log('Vercel API response status:', vercelResponse.status);
+    console.log('Vercel API response:', vercelData);
+
     if (!vercelResponse.ok) {
+      const errorMessage = vercelData.error?.message || 'Failed to deploy to Vercel';
+      console.error('Vercel deployment error:', vercelData);
+
       return NextResponse.json(
         {
           success: false,
-          error: vercelData.error?.message || 'Failed to deploy to Vercel',
+          error: errorMessage,
           details: vercelData,
+          vercelError: vercelData.error,
         },
         { status: vercelResponse.status }
       );
@@ -74,6 +83,8 @@ export async function POST(request: NextRequest) {
       : vercelData.alias?.[0]
       ? `https://${vercelData.alias[0]}`
       : null;
+
+    console.log('Deployment successful:', deploymentUrl);
 
     return NextResponse.json({
       success: true,

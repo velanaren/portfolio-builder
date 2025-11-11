@@ -315,12 +315,18 @@ export default function PortfolioBuilderPage() {
           },
         });
       } else {
-        throw new Error('Invalid response from deployment service');
+        // Enhanced error message from Vercel API
+        const errorDetails = data.vercelError || data.details || data.error;
+        const errorMessage = typeof errorDetails === 'string'
+          ? errorDetails
+          : JSON.stringify(errorDetails, null, 2);
+        throw new Error(errorMessage || 'Invalid response from deployment service');
       }
     } catch (error: any) {
       const errorMessage = error.message || 'Failed to deploy portfolio. Please try again.';
+      console.error('Deployment error:', error);
       setDeploymentError(errorMessage);
-      toast.error(errorMessage, {
+      toast.error('Deployment failed. Check the error details below.', {
         duration: 5000,
       });
     } finally {
@@ -874,9 +880,15 @@ export default function PortfolioBuilderPage() {
                 </div>
 
                 <div className="mb-6 p-4 rounded-lg" style={{ backgroundColor: '#FEF2F2' }}>
-                  <p className="text-[14px]" style={{ color: '#991B1B' }}>
-                    {deploymentError}
+                  <p className="text-[12px] font-semibold mb-2" style={{ color: '#991B1B' }}>
+                    Error Details:
                   </p>
+                  <pre
+                    className="text-[12px] overflow-auto max-h-64 p-3 rounded bg-white"
+                    style={{ color: '#991B1B' }}
+                  >
+                    {deploymentError}
+                  </pre>
                 </div>
 
                 <button
