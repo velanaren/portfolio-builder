@@ -211,7 +211,7 @@ export default function PortfolioBuilderPage() {
     }, 500);
   };
 
-  // Handle portfolio generation and deployment
+  // Handle portfolio generation
   const handleGenerate = async () => {
     if (!portfolioContent || !customization) {
       toast.error('Portfolio content not ready');
@@ -242,6 +242,8 @@ export default function PortfolioBuilderPage() {
 
       if (data.success && data.files) {
         setGeneratedFiles(data.files);
+        setIsGenerating(false);
+
         toast.success('Portfolio generated! Starting deployment...', {
           duration: 2000,
           style: {
@@ -250,9 +252,8 @@ export default function PortfolioBuilderPage() {
           },
         });
 
-        // Step 2: Automatically deploy to Vercel
-        setIsGenerating(false);
-        await handleDeploy();
+        // Step 2: Automatically deploy to Vercel with generated files
+        await deployToVercel(data.files);
       } else {
         throw new Error('Invalid response from server');
       }
@@ -267,13 +268,13 @@ export default function PortfolioBuilderPage() {
   };
 
   // Handle deployment to Vercel
-  const handleDeploy = async () => {
+  const deployToVercel = async (files: Array<{ path: string; content: string }>) => {
     if (!vercelApiKey.trim()) {
       toast.error('Please enter your Vercel API key');
       return;
     }
 
-    if (generatedFiles.length === 0) {
+    if (!files || files.length === 0) {
       toast.error('No files to deploy. Please generate your portfolio first.');
       return;
     }
@@ -289,7 +290,7 @@ export default function PortfolioBuilderPage() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          files: generatedFiles,
+          files: files,
           vercelApiKey,
           projectName: portfolioContent?.personalInfo.name
             .toLowerCase()
@@ -595,32 +596,182 @@ export default function PortfolioBuilderPage() {
                   </div>
                 )}
               </>
-            ) : isDeploying ? (
+            ) : generatedFiles.length > 0 && !deploymentUrl ? (
               <div
-                className="rounded-xl border p-8 max-w-4xl mx-auto text-center"
+                className="rounded-xl border p-8 max-w-4xl mx-auto"
                 style={{ backgroundColor: '#FFFFFF', borderColor: '#E5E7EB' }}
               >
-                <div
-                  className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"
-                  style={{ backgroundColor: '#DBEAFE' }}
-                >
-                  <Rocket className="w-8 h-8 animate-bounce" style={{ color: '#2563EB' }} />
+                {/* Progress Steps */}
+                <div className="mb-8">
+                  <div className="flex items-center justify-center gap-4 mb-6">
+                    {/* Step 1: Files Generated */}
+                    <div className="flex items-center gap-2">
+                      <div
+                        className="w-8 h-8 rounded-full flex items-center justify-center"
+                        style={{ backgroundColor: '#ECFDF5' }}
+                      >
+                        <span style={{ color: '#10B981', fontSize: '18px' }}>✓</span>
+                      </div>
+                      <span className="text-[14px] font-medium" style={{ color: '#10B981' }}>
+                        Files Generated
+                      </span>
+                    </div>
+
+                    <div className="w-12 h-0.5" style={{ backgroundColor: isDeploying ? '#D4A574' : '#E5E7EB' }} />
+
+                    {/* Step 2: Deploying */}
+                    <div className="flex items-center gap-2">
+                      <div
+                        className="w-8 h-8 rounded-full flex items-center justify-center"
+                        style={{ backgroundColor: isDeploying ? '#DBEAFE' : '#F3F4F6' }}
+                      >
+                        {isDeploying ? (
+                          <div className="w-4 h-4 rounded-full border-2 border-blue-600 border-t-transparent animate-spin" />
+                        ) : (
+                          <span style={{ color: '#9CA3AF', fontSize: '18px' }}>2</span>
+                        )}
+                      </div>
+                      <span className="text-[14px] font-medium" style={{ color: isDeploying ? '#2563EB' : '#9CA3AF' }}>
+                        Deploying
+                      </span>
+                    </div>
+
+                    <div className="w-12 h-0.5" style={{ backgroundColor: '#E5E7EB' }} />
+
+                    {/* Step 3: Live */}
+                    <div className="flex items-center gap-2">
+                      <div
+                        className="w-8 h-8 rounded-full flex items-center justify-center"
+                        style={{ backgroundColor: '#F3F4F6' }}
+                      >
+                        <span style={{ color: '#9CA3AF', fontSize: '18px' }}>3</span>
+                      </div>
+                      <span className="text-[14px] font-medium" style={{ color: '#9CA3AF' }}>
+                        Live
+                      </span>
+                    </div>
+                  </div>
                 </div>
-                <h2 className="text-[24px] font-semibold mb-2" style={{ color: '#1A1F2E' }}>
-                  Deploying to Vercel...
-                </h2>
-                <p className="text-[16px] mb-4" style={{ color: '#6B7280' }}>
-                  Your portfolio is being deployed. This may take a minute.
-                </p>
-                <div className="w-12 h-12 rounded-full border-4 border-t-transparent mx-auto animate-spin"
-                  style={{ borderColor: '#D4A574', borderTopColor: 'transparent' }}
-                />
+
+                {isDeploying ? (
+                  <div className="text-center">
+                    <div
+                      className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"
+                      style={{ backgroundColor: '#DBEAFE' }}
+                    >
+                      <Rocket className="w-8 h-8 animate-bounce" style={{ color: '#2563EB' }} />
+                    </div>
+                    <h2 className="text-[24px] font-semibold mb-2" style={{ color: '#1A1F2E' }}>
+                      Deploying to Vercel...
+                    </h2>
+                    <p className="text-[16px] mb-4" style={{ color: '#6B7280' }}>
+                      Your portfolio is being deployed. This may take a minute.
+                    </p>
+                    <div className="w-12 h-12 rounded-full border-4 border-t-transparent mx-auto animate-spin"
+                      style={{ borderColor: '#D4A574', borderTopColor: 'transparent' }}
+                    />
+                  </div>
+                ) : (
+                  <>
+                    <div className="text-center mb-6">
+                      <div
+                        className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"
+                        style={{ backgroundColor: '#ECFDF5' }}
+                      >
+                        <Download className="w-8 h-8" style={{ color: '#10B981' }} />
+                      </div>
+                      <h2 className="text-[24px] font-semibold mb-2" style={{ color: '#1A1F2E' }}>
+                        Portfolio Files Generated!
+                      </h2>
+                      <p className="text-[16px]" style={{ color: '#6B7280' }}>
+                        {generatedFiles.length} files ready for deployment
+                      </p>
+                    </div>
+
+                    <div className="mb-6">
+                      <h3 className="text-[16px] font-semibold mb-3" style={{ color: '#1A1F2E' }}>
+                        Generated Files:
+                      </h3>
+                      <div className="space-y-2 max-h-48 overflow-y-auto">
+                        {generatedFiles.map((file, index) => (
+                          <div
+                            key={index}
+                            className="p-3 rounded-lg flex items-center gap-2"
+                            style={{ backgroundColor: '#F8FAFB' }}
+                          >
+                            <span style={{ color: '#10B981' }}>✓</span>
+                            <span className="text-[14px] font-mono" style={{ color: '#1A1F2E' }}>
+                              {file.path}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div
+                      className="p-4 rounded-lg mb-4"
+                      style={{ backgroundColor: '#EFF6FF' }}
+                    >
+                      <p className="text-[14px]" style={{ color: '#1E40AF' }}>
+                        ⚡ Deployment will start automatically...
+                      </p>
+                    </div>
+                  </>
+                )}
               </div>
             ) : deploymentUrl ? (
               <div
                 className="rounded-xl border p-8 max-w-4xl mx-auto"
                 style={{ backgroundColor: '#FFFFFF', borderColor: '#E5E7EB' }}
               >
+                {/* Progress Steps - All Complete */}
+                <div className="mb-8">
+                  <div className="flex items-center justify-center gap-4 mb-6">
+                    {/* Step 1: Files Generated */}
+                    <div className="flex items-center gap-2">
+                      <div
+                        className="w-8 h-8 rounded-full flex items-center justify-center"
+                        style={{ backgroundColor: '#ECFDF5' }}
+                      >
+                        <span style={{ color: '#10B981', fontSize: '18px' }}>✓</span>
+                      </div>
+                      <span className="text-[14px] font-medium" style={{ color: '#10B981' }}>
+                        Files Generated
+                      </span>
+                    </div>
+
+                    <div className="w-12 h-0.5" style={{ backgroundColor: '#10B981' }} />
+
+                    {/* Step 2: Deployed */}
+                    <div className="flex items-center gap-2">
+                      <div
+                        className="w-8 h-8 rounded-full flex items-center justify-center"
+                        style={{ backgroundColor: '#ECFDF5' }}
+                      >
+                        <span style={{ color: '#10B981', fontSize: '18px' }}>✓</span>
+                      </div>
+                      <span className="text-[14px] font-medium" style={{ color: '#10B981' }}>
+                        Deployed
+                      </span>
+                    </div>
+
+                    <div className="w-12 h-0.5" style={{ backgroundColor: '#10B981' }} />
+
+                    {/* Step 3: Live */}
+                    <div className="flex items-center gap-2">
+                      <div
+                        className="w-8 h-8 rounded-full flex items-center justify-center"
+                        style={{ backgroundColor: '#ECFDF5' }}
+                      >
+                        <span style={{ color: '#10B981', fontSize: '18px' }}>✓</span>
+                      </div>
+                      <span className="text-[14px] font-medium" style={{ color: '#10B981' }}>
+                        Live
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
                 <div className="text-center mb-8">
                   <div
                     className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"
@@ -731,7 +882,7 @@ export default function PortfolioBuilderPage() {
                 <button
                   onClick={() => {
                     setDeploymentError(null);
-                    handleDeploy();
+                    deployToVercel(generatedFiles);
                   }}
                   disabled={isDeploying}
                   className="w-full px-6 py-3 rounded-lg font-semibold text-[14px] transition-all duration-200"
