@@ -212,3 +212,102 @@ export interface SkillsAnalysis {
   recommendations: string[];
   summary: string;
 }
+
+/**
+ * Portfolio Builder Types - Used for Phase 7
+ */
+
+/**
+ * Portfolio Template Types
+ */
+export type PortfolioTemplate = 'minimal' | 'creative' | 'professional' | 'artistic';
+
+/**
+ * PortfolioContent - Complete portfolio content structure
+ */
+export interface PortfolioContent {
+  personalInfo: {
+    name: string;
+    title: string;
+    bio: string;
+    email: string;
+    phone: string;
+    location: string;
+    profileImage?: string;
+  };
+  sections: {
+    about: { enabled: boolean; content: string };
+    experience: { enabled: boolean; items: PortfolioExperience[] };
+    projects: { enabled: boolean; items: PortfolioProject[] };
+    skills: { enabled: boolean; items: string[] };
+    education: { enabled: boolean; items: PortfolioEducation[] };
+    contact: { enabled: boolean; email: string; phone: string };
+  };
+  socialLinks: {
+    github?: string;
+    linkedin?: string;
+    twitter?: string;
+    website?: string;
+  };
+}
+
+/**
+ * PortfolioExperience - Experience item for portfolio
+ */
+export interface PortfolioExperience {
+  id: string;
+  company: string;
+  position: string;
+  duration: string;
+  description: string;
+}
+
+/**
+ * PortfolioProject - Project item for portfolio
+ */
+export interface PortfolioProject {
+  id: string;
+  name: string;
+  description: string;
+  technologies: string[];
+  url?: string;
+  imageUrl?: string;
+}
+
+/**
+ * PortfolioEducation - Education item for portfolio
+ */
+export interface PortfolioEducation {
+  id: string;
+  school: string;
+  degree: string;
+  field: string;
+  year?: string;
+}
+
+/**
+ * PortfolioCustomization - Customization settings for portfolio
+ */
+export interface PortfolioCustomization {
+  template: PortfolioTemplate;
+  colors: {
+    primary: string;
+    accent: string;
+    background: string;
+    text: string;
+  };
+  fonts: {
+    heading: string;
+    body: string;
+  };
+  sections: {
+    about: boolean;
+    experience: boolean;
+    projects: boolean;
+    skills: boolean;
+    education: boolean;
+    contact: boolean;
+  };
+  darkMode: boolean;
+  layout: 'single-column' | 'two-column' | 'sidebar';
+}

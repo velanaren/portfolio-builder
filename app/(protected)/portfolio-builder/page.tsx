@@ -1,94 +1,512 @@
 /**
- * Portfolio Builder Page (Placeholder)
- * This feature will be built in a future phase
+ * Portfolio Builder Page - Phase 7
+ * Dynamic portfolio website generator
  */
 
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import Navigation from '@/components/Navigation';
-import { Globe, ArrowLeft } from 'lucide-react';
+import { parseResumeFile } from '@/lib/resumeParsing';
+import { ParsedResume, PortfolioContent, PortfolioCustomization, PortfolioTemplate } from '@/types';
+import { getDefaultCustomization } from '@/lib/portfolio/templates';
+import toast, { Toaster } from 'react-hot-toast';
+import { ChevronLeft, Download, Sparkles } from 'lucide-react';
+
+// Import components
+import ResumeUpload from '@/components/skills-analysis/ResumeUpload';
+import ResumeReview from '@/components/skills-analysis/ResumeReview';
+import TemplateSelector from '@/components/portfolio/TemplateSelector';
+
+type Step = 'upload' | 'review' | 'template' | 'generate';
 
 export default function PortfolioBuilderPage() {
   const router = useRouter();
-  const { requireAuth, isLoading } = useAuth();
+  const { requireAuth, isLoading: authLoading } = useAuth();
+
+  // Step management
+  const [currentStep, setCurrentStep] = useState<Step>('upload');
+
+  // Resume state
+  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  const [parsedResume, setParsedResume] = useState<ParsedResume | null>(null);
+  const [isParsingResume, setIsParsingResume] = useState(false);
+  const [parseError, setParseError] = useState<string | null>(null);
+  const [confidence, setConfidence] = useState<'high' | 'medium' | 'low'>('medium');
+  const [warnings, setWarnings] = useState<string[]>([]);
+
+  // Template selection
+  const [selectedTemplate, setSelectedTemplate] = useState<PortfolioTemplate | null>(null);
+
+  // Portfolio content
+  const [portfolioContent, setPortfolioContent] = useState<PortfolioContent | null>(null);
+  const [customization, setCustomization] = useState<PortfolioCustomization | null>(null);
+
+  // Generation state
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [generationError, setGenerationError] = useState<string | null>(null);
+  const [generatedFiles, setGeneratedFiles] = useState<Array<{ path: string; content: string }>>([]);
 
   useEffect(() => {
     requireAuth();
   }, [requireAuth]);
 
-  if (isLoading) {
+  // Handle file upload
+  const handleFileUpload = async (file: File) => {
+    setUploadedFile(file);
+    setParseError(null);
+    setIsParsingResume(true);
+
+    try {
+      const result = await parseResumeFile(file);
+
+      if (result.success && result.resumeData) {
+        setParsedResume(result.resumeData);
+        setConfidence(result.confidence || 'medium');
+        setWarnings(result.warnings || []);
+
+        toast.success('Resume parsed successfully!', {
+          duration: 3000,
+          style: {
+            background: '#10B981',
+            color: '#FFFFFF',
+          },
+        });
+
+        setCurrentStep('review');
+      } else {
+        setParseError(result.error || 'Failed to parse resume');
+        toast.error(result.error || 'Failed to parse resume', {
+          duration: 4000,
+        });
+      }
+    } catch (error: any) {
+      const errorMessage = error.message || 'Failed to parse resume. Please try again.';
+      setParseError(errorMessage);
+      toast.error(errorMessage, {
+        duration: 4000,
+      });
+    } finally {
+      setIsParsingResume(false);
+    }
+  };
+
+  // Handle resume confirmation
+  const handleResumeConfirm = (editedResume: ParsedResume) => {
+    setParsedResume(editedResume);
+    setCurrentStep('template');
+    toast.success('Resume confirmed! Now select a template.', {
+      duration: 3000,
+    });
+  };
+
+  // Handle resume re-upload
+  const handleReupload = () => {
+    setUploadedFile(null);
+    setParsedResume(null);
+    setParseError(null);
+    setCurrentStep('upload');
+    setSelectedTemplate(null);
+    setPortfolioContent(null);
+    setCustomization(null);
+  };
+
+  // Handle template selection
+  const handleTemplateSelect = (template: PortfolioTemplate) => {
+    setSelectedTemplate(template);
+
+    // Convert parsed resume to portfolio content
+    if (parsedResume) {
+      const content: PortfolioContent = {
+        personalInfo: {
+          name: parsedResume.personalInfo.name,
+          title: 'Professional', // Default title, user can customize later
+          bio: parsedResume.summary || '',
+          email: parsedResume.personalInfo.email,
+          phone: parsedResume.personalInfo.phone,
+          location: parsedResume.personalInfo.location || '',
+          profileImage: '',
+        },
+        sections: {
+          about: {
+            enabled: true,
+            content: parsedResume.summary || '',
+          },
+          experience: {
+            enabled: true,
+            items: parsedResume.experience.map((exp) => ({
+              id: exp.id,
+              company: exp.company,
+              position: exp.position,
+              duration: `${exp.startDate} - ${exp.current ? 'Present' : exp.endDate}`,
+              description: exp.description,
+            })),
+          },
+          projects: {
+            enabled: true,
+            items:
+              parsedResume.projects?.map((proj) => ({
+                id: proj.id,
+                name: proj.name,
+                description: proj.description,
+                technologies: proj.technologies || [],
+                url: proj.url,
+                imageUrl: '',
+              })) || [],
+          },
+          skills: {
+            enabled: true,
+            items: parsedResume.skills,
+          },
+          education: {
+            enabled: true,
+            items: parsedResume.education.map((edu) => ({
+              id: edu.id,
+              school: edu.institution,
+              degree: edu.degree,
+              field: edu.field,
+              year: edu.graduationDate,
+            })),
+          },
+          contact: {
+            enabled: true,
+            email: parsedResume.personalInfo.email,
+            phone: parsedResume.personalInfo.phone,
+          },
+        },
+        socialLinks: {
+          github: parsedResume.personalInfo.linkedIn || '',
+          linkedin: parsedResume.personalInfo.linkedin || '',
+          twitter: '',
+          website: '',
+        },
+      };
+
+      setPortfolioContent(content);
+      setCustomization(getDefaultCustomization(template));
+    }
+
+    toast.success('Template selected! Generating portfolio...', {
+      duration: 2000,
+    });
+
+    // Auto-advance to generate step
+    setTimeout(() => {
+      setCurrentStep('generate');
+    }, 500);
+  };
+
+  // Handle portfolio generation
+  const handleGenerate = async () => {
+    if (!portfolioContent || !customization) {
+      toast.error('Portfolio content not ready');
+      return;
+    }
+
+    setIsGenerating(true);
+    setGenerationError(null);
+
+    try {
+      const response = await fetch('/api/generate-portfolio-code', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          portfolioContent,
+          customization,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to generate portfolio');
+      }
+
+      if (data.success && data.files) {
+        setGeneratedFiles(data.files);
+        toast.success('Portfolio generated successfully!', {
+          duration: 3000,
+          style: {
+            background: '#10B981',
+            color: '#FFFFFF',
+          },
+        });
+      } else {
+        throw new Error('Invalid response from server');
+      }
+    } catch (error: any) {
+      const errorMessage = error.message || 'Failed to generate portfolio. Please try again.';
+      setGenerationError(errorMessage);
+      toast.error(errorMessage, {
+        duration: 4000,
+      });
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  // Handle download
+  const handleDownload = () => {
+    if (generatedFiles.length === 0) return;
+
+    // Create a text file with all code
+    const allFiles = generatedFiles
+      .map((f) => `=== ${f.path} ===\n\n${f.content}\n\n`)
+      .join('\n');
+
+    const blob = new Blob([allFiles], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'portfolio-code.txt';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    toast.success('Portfolio code downloaded!', {
+      duration: 2000,
+    });
+  };
+
+  if (authLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="text-center">
-          <div className="h-12 w-12 animate-spin rounded-full border-4 border-indigo-600 border-t-transparent mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading...</p>
+          <div
+            className="h-12 w-12 animate-spin rounded-full border-4 border-t-transparent mx-auto mb-4"
+            style={{ borderColor: '#D4A574', borderTopColor: 'transparent' }}
+          />
+          <p style={{ color: '#6B7280' }}>Loading...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen" style={{ backgroundColor: '#F8FAFB' }}>
       <Navigation />
+      <Toaster position="top-right" />
 
-      <main className="mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:px-8">
-        <div className="text-center">
-          {/* Icon */}
-          <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-indigo-100">
-            <Globe className="h-10 w-10 text-indigo-600" />
-          </div>
-
-          {/* Title */}
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">
-            Portfolio Generator
-          </h1>
-
-          {/* Placeholder Message */}
-          <p className="text-xl text-gray-600 mb-8">
-            This feature will be built in Phase 5
-          </p>
-
-          {/* Feature Description */}
-          <div className="bg-white rounded-xl shadow-sm p-8 mb-8 text-left">
-            <h2 className="text-2xl font-semibold text-gray-900 mb-4">
-              Coming Soon
-            </h2>
-            <ul className="space-y-3 text-gray-600">
-              <li className="flex items-start">
-                <span className="mr-2">•</span>
-                <span>Choose from modern, professional templates</span>
-              </li>
-              <li className="flex items-start">
-                <span className="mr-2">•</span>
-                <span>Drag-and-drop interface for easy customization</span>
-              </li>
-              <li className="flex items-start">
-                <span className="mr-2">•</span>
-                <span>Add projects, skills, and work experience</span>
-              </li>
-              <li className="flex items-start">
-                <span className="mr-2">•</span>
-                <span>Fully responsive and mobile-friendly designs</span>
-              </li>
-              <li className="flex items-start">
-                <span className="mr-2">•</span>
-                <span>One-click deployment to custom domain</span>
-              </li>
-            </ul>
-          </div>
-
-          {/* Back Button */}
+      <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+        {/* Header */}
+        <div className="mb-8">
           <button
             onClick={() => router.push('/dashboard')}
-            className="inline-flex items-center space-x-2 rounded-lg bg-indigo-600 px-6 py-3 text-sm font-semibold text-white transition-all duration-200 hover:bg-indigo-700 hover:scale-105"
+            className="flex items-center gap-2 text-[14px] mb-4 transition-colors duration-200"
+            style={{ color: '#6B7280' }}
           >
-            <ArrowLeft className="h-4 w-4" />
+            <ChevronLeft className="w-4 h-4" />
             <span>Back to Dashboard</span>
           </button>
+
+          <div className="flex items-center gap-3 mb-2">
+            <Sparkles className="w-8 h-8" style={{ color: '#D4A574' }} />
+            <h1 className="text-[32px] font-bold" style={{ color: '#1A1F2E' }}>
+              Portfolio Website Generator
+            </h1>
+          </div>
+          <p className="text-[16px]" style={{ color: '#6B7280' }}>
+            Create a professional Next.js portfolio website in minutes
+          </p>
         </div>
+
+        {/* Step Indicators */}
+        <div className="flex items-center gap-2 mb-8 flex-wrap">
+          {['upload', 'review', 'template', 'generate'].map((step, index) => {
+            const stepLabels = {
+              upload: 'Upload',
+              review: 'Review',
+              template: 'Template',
+              generate: 'Generate',
+            };
+            const isActive = currentStep === step;
+            const isCompleted =
+              (step === 'upload' && ['review', 'template', 'generate'].includes(currentStep)) ||
+              (step === 'review' && ['template', 'generate'].includes(currentStep)) ||
+              (step === 'template' && currentStep === 'generate');
+
+            return (
+              <div
+                key={step}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-[14px] font-semibold transition-all duration-300 ${
+                  isActive ? 'opacity-100' : 'opacity-50'
+                }`}
+                style={{
+                  backgroundColor: isActive || isCompleted ? '#D4A574' : '#E5E7EB',
+                  color: isActive || isCompleted ? '#FFFFFF' : '#6B7280',
+                }}
+              >
+                <span
+                  className="w-6 h-6 rounded-full flex items-center justify-center text-[12px] font-bold bg-white"
+                  style={{ color: isActive || isCompleted ? '#D4A574' : '#6B7280' }}
+                >
+                  {index + 1}
+                </span>
+                {stepLabels[step as keyof typeof stepLabels]}
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Step Content */}
+        {currentStep === 'upload' && (
+          <ResumeUpload
+            onFileUpload={handleFileUpload}
+            isLoading={isParsingResume}
+            error={parseError}
+          />
+        )}
+
+        {currentStep === 'review' && parsedResume && (
+          <ResumeReview
+            resumeData={parsedResume}
+            confidence={confidence}
+            warnings={warnings}
+            onConfirm={handleResumeConfirm}
+            onReupload={handleReupload}
+          />
+        )}
+
+        {currentStep === 'template' && (
+          <TemplateSelector
+            selectedTemplate={selectedTemplate}
+            onSelectTemplate={handleTemplateSelect}
+          />
+        )}
+
+        {currentStep === 'generate' && (
+          <div className="max-w-4xl mx-auto">
+            {generatedFiles.length === 0 ? (
+              <div
+                className="rounded-xl border p-8 text-center"
+                style={{ backgroundColor: '#FFFFFF', borderColor: '#E5E7EB' }}
+              >
+                <h2 className="text-[24px] font-semibold mb-4" style={{ color: '#1A1F2E' }}>
+                  Ready to Generate Your Portfolio
+                </h2>
+                <p className="text-[16px] mb-6" style={{ color: '#6B7280' }}>
+                  Click the button below to generate your Next.js portfolio website code
+                </p>
+
+                <button
+                  onClick={handleGenerate}
+                  disabled={isGenerating}
+                  className={`px-8 py-4 rounded-xl font-semibold text-[16px] transition-all duration-300 ${
+                    isGenerating ? 'opacity-50 cursor-not-allowed' : 'hover:scale-105'
+                  }`}
+                  style={{
+                    backgroundColor: '#D4A574',
+                    color: '#FFFFFF',
+                  }}
+                >
+                  {isGenerating ? (
+                    <div className="flex items-center gap-3">
+                      <div className="w-5 h-5 rounded-full border-2 border-white border-t-transparent animate-spin" />
+                      <span>Generating...</span>
+                    </div>
+                  ) : (
+                    'Generate Portfolio Code'
+                  )}
+                </button>
+
+                {generationError && (
+                  <div
+                    className="mt-6 p-4 rounded-lg"
+                    style={{ backgroundColor: '#FEF2F2', color: '#991B1B' }}
+                  >
+                    {generationError}
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div
+                className="rounded-xl border p-8"
+                style={{ backgroundColor: '#FFFFFF', borderColor: '#E5E7EB' }}
+              >
+                <div className="text-center mb-8">
+                  <div
+                    className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"
+                    style={{ backgroundColor: '#ECFDF5' }}
+                  >
+                    <Download className="w-8 h-8" style={{ color: '#10B981' }} />
+                  </div>
+                  <h2 className="text-[24px] font-semibold mb-2" style={{ color: '#1A1F2E' }}>
+                    Portfolio Generated Successfully!
+                  </h2>
+                  <p className="text-[16px]" style={{ color: '#6B7280' }}>
+                    Your Next.js portfolio code is ready
+                  </p>
+                </div>
+
+                <div className="mb-6">
+                  <h3 className="text-[18px] font-semibold mb-3" style={{ color: '#1A1F2E' }}>
+                    Generated Files ({generatedFiles.length})
+                  </h3>
+                  <div className="space-y-2">
+                    {generatedFiles.map((file, index) => (
+                      <div
+                        key={index}
+                        className="p-3 rounded-lg"
+                        style={{ backgroundColor: '#F8FAFB' }}
+                      >
+                        <span className="text-[14px] font-mono" style={{ color: '#1A1F2E' }}>
+                          {file.path}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="flex gap-4">
+                  <button
+                    onClick={handleDownload}
+                    className="flex-1 px-6 py-3 rounded-lg font-semibold text-[14px] transition-all duration-200 hover:scale-105"
+                    style={{
+                      backgroundColor: '#D4A574',
+                      color: '#FFFFFF',
+                    }}
+                  >
+                    <Download className="w-4 h-4 inline mr-2" />
+                    Download Code
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      setGeneratedFiles([]);
+                      setCurrentStep('upload');
+                      handleReupload();
+                    }}
+                    className="flex-1 px-6 py-3 rounded-lg font-semibold text-[14px] transition-all duration-200"
+                    style={{
+                      backgroundColor: '#F8FAFB',
+                      color: '#1A1F2E',
+                    }}
+                  >
+                    Create Another Portfolio
+                  </button>
+                </div>
+
+                <div className="mt-6 p-4 rounded-lg" style={{ backgroundColor: '#FEF3C7' }}>
+                  <p className="text-[12px] font-semibold mb-1" style={{ color: '#92400E' }}>
+                    📝 Next Steps:
+                  </p>
+                  <ul className="text-[12px] space-y-1" style={{ color: '#92400E' }}>
+                    <li>1. Download the generated code</li>
+                    <li>2. Create a new folder and extract the files</li>
+                    <li>3. Run `npm install` to install dependencies</li>
+                    <li>4. Run `npm run dev` to start the development server</li>
+                    <li>5. Deploy to Vercel with `vercel` command</li>
+                  </ul>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
       </main>
     </div>
   );
