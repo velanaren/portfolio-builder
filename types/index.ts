@@ -162,3 +162,53 @@ export interface ResumeContextType {
   error: string | null;
   setError: (error: string | null) => void;
 }
+
+/**
+ * Skills Analysis Types - Used for Phase 6
+ */
+
+/**
+ * ExtractedSkill - A skill extracted from resume or job description
+ */
+export interface ExtractedSkill {
+  name: string;
+  category?: string; // e.g., 'programming', 'framework', 'database', 'tool'
+  proficiency?: 'junior' | 'intermediate' | 'expert';
+  yearsOfExperience?: number;
+}
+
+/**
+ * MatchedSkill - A skill that matches between resume and job
+ */
+export interface MatchedSkill extends ExtractedSkill {
+  matchScore: number; // 0-100 percentage
+  matchStrength: 'exact' | 'similar' | 'related';
+}
+
+/**
+ * MissingSkill - A skill the candidate is missing for the job
+ */
+export interface MissingSkill extends ExtractedSkill {
+  importance: 'required' | 'preferred' | 'nice-to-have';
+  difficulty: 'beginner' | 'intermediate' | 'advanced';
+  estimatedLearningTime: string; // e.g., "2-4 weeks"
+}
+
+/**
+ * BonusSkill - A skill the candidate has but job doesn't require
+ */
+export interface BonusSkill extends ExtractedSkill {
+  relevance: 'highly-relevant' | 'somewhat-relevant' | 'tangential';
+}
+
+/**
+ * SkillsAnalysis - Complete analysis results
+ */
+export interface SkillsAnalysis {
+  matchPercentage: number;
+  matchingSkills: MatchedSkill[];
+  missingSkills: MissingSkill[];
+  bonusSkills: BonusSkill[];
+  recommendations: string[];
+  summary: string;
+}
