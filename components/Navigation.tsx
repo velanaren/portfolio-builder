@@ -1,14 +1,12 @@
 /**
- * Navigation Component - Gen Z Design
- * Bold, glassmorphism header with distinctive styling
+ * Navigation Component - Premium Design
+ * Sophisticated header with elegant styling
  */
 
 'use client';
 
 import { useAuth } from '@/hooks/useAuth';
-import { LogOut, Sparkles, Home } from 'lucide-react';
-import Link from 'next/link';
-import { Button } from './ui';
+import { LogOut } from 'lucide-react';
 
 export default function Navigation() {
   const { user, logout } = useAuth();
@@ -23,64 +21,39 @@ export default function Navigation() {
   };
 
   return (
-    <nav className="sticky top-0 z-50 glass-light border-b border-[var(--border)] backdrop-blur-xl">
-      <div className="mx-auto max-w-[1400px] px-6 lg:px-12">
+    <nav className="sticky top-0 z-50 bg-white border-b border-[#E5E7EB]">
+      <div className="mx-auto max-w-[1200px] px-8 lg:px-10">
         <div className="flex h-20 items-center justify-between">
           {/* Logo/Brand */}
-          <Link href="/dashboard" className="flex items-center gap-3 group">
-            <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-[var(--brand)] to-[var(--accent-secondary)] flex items-center justify-center shadow-[0_0_20px_rgba(0,217,255,0.2)] group-hover:shadow-[0_0_30px_rgba(0,217,255,0.4)] transition-all duration-300 group-hover:scale-105">
-              <Sparkles className="w-5 h-5 text-[var(--bg-primary)]" strokeWidth={2.5} />
-            </div>
-            <h1 className="text-2xl font-bold text-[var(--text-primary)] tracking-tight font-[var(--font-display)] group-hover:text-[var(--brand-light)] transition-colors">
+          <div className="flex items-center">
+            <h1 className="text-[28px] font-bold text-[#0F1419] tracking-[-0.5px] cursor-pointer">
               PortfolioMaker
             </h1>
-          </Link>
-
-          {/* Quick Navigation (Optional - Hidden on mobile) */}
-          <div className="hidden md:flex items-center gap-2">
-            <Link href="/dashboard">
-              <button className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-[var(--text-secondary)] hover:text-[var(--brand)] hover:bg-[var(--bg-elevated)] transition-all duration-200 font-[var(--font-body)]">
-                <Home className="w-4 h-4" />
-                <span>Dashboard</span>
-              </button>
-            </Link>
           </div>
 
-          {/* User Info & Actions */}
-          <div className="flex items-center gap-4">
+          {/* User Info & Logout */}
+          <div className="flex items-center space-x-6">
             {/* User Info */}
-            <div className="flex items-center gap-3">
-              {/* User Avatar with Initials - Gradient Background */}
-              <div className="relative group/avatar">
-                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-[var(--brand)] to-[var(--accent-secondary)] text-[var(--bg-primary)] font-bold text-sm shadow-[0_0_15px_rgba(0,217,255,0.2)] group-hover/avatar:shadow-[0_0_25px_rgba(0,217,255,0.4)] transition-all duration-300 group-hover/avatar:scale-105 font-[var(--font-display)]">
-                  {user ? getInitials(user.name) : 'U'}
-                </div>
-                {/* Online indicator */}
-                <div className="absolute bottom-0 right-0 w-3 h-3 bg-[var(--success)] rounded-full border-2 border-[var(--bg-primary)] animate-pulse" />
+            <div className="flex items-center space-x-3">
+              {/* User Avatar with Initials */}
+              <div className="flex h-11 w-11 items-center justify-center rounded-full bg-[#D4A574] text-[#0F1419] font-semibold text-[14px]">
+                {user ? getInitials(user.name) : 'U'}
               </div>
-
-              {/* User Name - Hidden on small screens */}
-              <div className="hidden sm:block">
-                <p className="text-sm font-semibold text-[var(--text-primary)] font-[var(--font-body)]">
-                  {user?.name || 'User'}
-                </p>
-                <p className="text-xs text-[var(--text-tertiary)] font-[var(--font-body)]">
-                  {user?.email || ''}
-                </p>
-              </div>
+              {/* User Name */}
+              <span className="hidden sm:inline-block text-[14px] font-semibold text-[#0F1419]">
+                {user?.name || 'User'}
+              </span>
             </div>
 
             {/* Logout Button */}
-            <Button
+            <button
               onClick={logout}
-              variant="ghost"
-              size="md"
-              icon={<LogOut className="w-4 h-4" />}
-              className="group"
+              className="flex items-center space-x-2 rounded-lg border border-[#E5E7EB] px-4 py-2.5 text-[14px] font-semibold text-[#0F1419] transition-all duration-300 hover:bg-[#F8FAFB] hover:border-[#D4A574] focus:outline-none focus:ring-2 focus:ring-[#D4A574] focus:ring-offset-2"
               aria-label="Logout"
             >
+              <LogOut className="h-[18px] w-[18px]" />
               <span className="hidden sm:inline">Logout</span>
-            </Button>
+            </button>
           </div>
         </div>
       </div>
