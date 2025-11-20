@@ -3,10 +3,10 @@
  * Bold, distinctive, atmospheric aesthetic
  */
 
-@import "tailwindcss";
-
 /* Google Fonts - Distinctive Typography */
 @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800;900&family=IBM+Plex+Sans:wght@100;200;300;400;500;600;700&family=Playfair+Display:wght@700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+
+@import "tailwindcss";
 
 /* ========================================
    CSS VARIABLES - Design System
